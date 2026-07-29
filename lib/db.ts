@@ -27,6 +27,14 @@ function getDb(): Promise<SQLite.SQLiteDatabase> {
           mood TEXT NOT NULL DEFAULT '[]',
           notes TEXT
         );
+        CREATE TABLE IF NOT EXISTS pregnancy (
+          id INTEGER PRIMARY KEY CHECK (id = 1),
+          lmp_date TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS preferences (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL
+        );
       `);
       return db;
     });
@@ -121,4 +129,53 @@ export async function listDailyLogs(): Promise<DailyLog[]> {
     mood: JSON.parse(row.mood),
     notes: row.notes,
   }));
+}
+
+// Fila única: como mucho hay un embarazo activo trackeado a la vez. El
+// CHECK(id = 1) en la tabla ya lo garantiza; el upsert siempre apunta a esa
+// misma fila.
+export async function setPregnancy(lmpDate: string): Promise<void> {
+  const db = await getDb();
+  await db.runAsync(
+    `INSERT INTO pregnancy (id, lmp_date) VALUES (1, ?)
+     ON CONFLICT(id) DO UPDATE SET lmp_date = excluded.lmp_date`,
+    [lmpDate]
+  );
+}
+
+export async function getPregnancyLmp(): Promise<string | null> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ lmp_date: string }>(
+    "SELECT lmp_date FROM pregnancy WHERE id = 1"
+  );
+  return row?.lmp_date ?? null;
+}
+
+export async function clearPregnancy(): Promise<void> {
+  const db = await getDb();
+  await db.runAsync("DELETE FROM pregnancy WHERE id = 1");
+}
+
+/**
+ * Preferencias como clave-valor en vez de una tabla por opción. El
+ * embarazo tiene tabla propia porque guarda una fecha con la que se
+ * calcula; una preferencia que solo prende o apaga algo no justifica una
+ * migración cada vez que se agrega una.
+ */
+export async function setPreference(key: string, value: string): Promise<void> {
+  const db = await getDb();
+  await db.runAsync(
+    `INSERT INTO preferences (key, value) VALUES (?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+    [key, value]
+  );
+}
+
+export async function getPreference(key: string): Promise<string | null> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ value: string }>(
+    "SELECT value FROM preferences WHERE key = ?",
+    [key]
+  );
+  return row?.value ?? null;
 }
