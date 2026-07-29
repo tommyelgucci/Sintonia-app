@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useFocusEffect, useRouter } from "expo-router";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { addCycleStart } from "@/lib/db";
 import { pushCycleToCloud } from "@/lib/sync";
@@ -23,10 +23,12 @@ import {
 import {
   BookIcon,
   CalendarPlusIcon,
+  ChevronRightIcon,
   DropletIcon,
   LinkPeopleIcon,
   MoonIcon,
   PulseIcon,
+  ShieldIcon,
   SproutIcon,
   SunIcon,
 } from "@/lib/icons";
@@ -51,6 +53,24 @@ const TRIMESTER_LABELS: Record<Trimester, string> = {
   primero: "Primer trimestre",
   segundo: "Segundo trimestre",
   tercero: "Tercer trimestre",
+};
+
+/**
+ * Qué leer según en qué fase está. Se ofrece el contenido en el momento
+ * en que probablemente haga falta, en vez de esperar a que lo busque en
+ * la biblioteca — que es cuando ya está con el síntoma encima.
+ */
+const PHASE_SUGGESTION: Record<CyclePhase, { articleId: string; hook: string } | null> = {
+  menstrual: {
+    articleId: "dolor-bajo-vientre",
+    hook: "Si tenés cólicos, qué alivia de verdad y qué señales no conviene esperar.",
+  },
+  folicular: null,
+  ovulacion: null,
+  lutea: {
+    articleId: "ansiedad-premenstrual",
+    hook: "Por qué la ansiedad sube estos días, y qué ayuda cuando ya está alta.",
+  },
 };
 
 function todayStr(): string {
@@ -116,6 +136,14 @@ export default function HomeScreen() {
         index={startIndex + 2}
         icon={<BookIcon size={21} color="#6B4C71" />}
         tint="#E8E0EA"
+        title="Aprender"
+        subtitle="Dolor, anticonceptivos, SOP y más"
+        onPress={() => router.push("/library")}
+      />
+      <ActionRow
+        index={startIndex + 3}
+        icon={<ShieldIcon size={21} color="#9C6B2C" />}
+        tint="#F5E7D2"
         title="Reporte para el médico"
         subtitle="Resumen en PDF de tus ciclos"
         onPress={() => router.push("/health-report")}
@@ -219,6 +247,7 @@ export default function HomeScreen() {
   const { prediction, isEstimated } = cycle;
   const note = PHASE_NOTES[prediction.phase];
   const PhaseIcon = PHASE_ICONS[prediction.phase];
+  const suggestion = PHASE_SUGGESTION[prediction.phase];
   const cycleLength = prediction.cycleDay + prediction.daysUntilNextPeriod;
 
   return (
@@ -256,7 +285,22 @@ export default function HomeScreen() {
           </View>
         </Card>
 
-        <FadeInView index={2}>
+        {suggestion && (
+          <FadeInView index={2}>
+            <Pressable
+              onPress={() => router.push(`/library/${suggestion.articleId}`)}
+              style={({ pressed }) => [styles.suggestion, pressed && { opacity: 0.9 }]}
+            >
+              <BookIcon size={20} color={colors.clayDeep} />
+              <Text style={[type.bodySmall, { color: colors.ink, flex: 1 }]}>
+                {suggestion.hook}
+              </Text>
+              <ChevronRightIcon size={16} color={colors.clay} />
+            </Pressable>
+          </FadeInView>
+        )}
+
+        <FadeInView index={3}>
           <View style={styles.statRow}>
             <Stat
               label="Próximo período"
@@ -272,7 +316,7 @@ export default function HomeScreen() {
         </FadeInView>
 
         {isEstimated && (
-          <FadeInView index={3}>
+          <FadeInView index={4}>
             <Text style={[type.bodySmall, styles.estimateNote]}>
               Estimado sobre un ciclo de 28 días. Se ajusta solo a medida que
               registrás más períodos.
@@ -280,19 +324,19 @@ export default function HomeScreen() {
           </FadeInView>
         )}
 
-        <FadeInView index={4}>
+        <FadeInView index={5}>
           <Eyebrow>Ahora</Eyebrow>
         </FadeInView>
 
         <ActionRow
-          index={5}
+          index={6}
           icon={<CalendarPlusIcon size={21} color={colors.clayDeep} />}
           tint="#F0E2DA"
           title="Mi período empezó hoy"
           subtitle={saving ? "Guardando..." : "Ajusta la predicción al instante"}
           onPress={markPeriodStartToday}
         />
-        {sharedActions(6)}
+        {sharedActions(7)}
 
         <QuietButton
           label="Estoy embarazada"
@@ -346,4 +390,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.md,
   },
   estimateNote: { color: colors.inkFaint, textAlign: "center", paddingHorizontal: space.lg },
+  suggestion: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space.md,
+    backgroundColor: "#F5E9E3",
+    borderRadius: radius.md,
+    padding: space.lg,
+  },
 });
