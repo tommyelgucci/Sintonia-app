@@ -1,21 +1,52 @@
+import { useEffect } from "react";
 import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { useFonts } from "expo-font";
+import {
+  Fraunces_600SemiBold,
+  Fraunces_700Bold,
+} from "@expo-google-fonts/fraunces";
+import {
+  Karla_400Regular,
+  Karla_500Medium,
+  Karla_700Bold,
+} from "@expo-google-fonts/karla";
+import { colors, fonts } from "@/lib/theme";
 
-const HEADER_STYLE = {
-  backgroundColor: "#2C1A4D",
-};
+SplashScreen.preventAutoHideAsync().catch(() => {
+  // En web no siempre hay splash que ocultar; no es un error que importe.
+});
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    Fraunces_600SemiBold,
+    Fraunces_700Bold,
+    Karla_400Regular,
+    Karla_500Medium,
+    Karla_700Bold,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded) SplashScreen.hideAsync().catch(() => {});
+  }, [fontsLoaded]);
+
+  // Renderizar antes de que carguen las fuentes hace que el texto salte de
+  // la del sistema a la nuestra a la vista. Preferimos un frame en blanco.
+  if (!fontsLoaded) return null;
+
   return (
     <Stack
       screenOptions={{
-        headerStyle: HEADER_STYLE,
-        headerTintColor: "#fff",
-        headerTitleStyle: { fontWeight: "600" },
+        headerStyle: { backgroundColor: colors.canvas },
+        headerShadowVisible: false,
+        headerTintColor: colors.ink,
+        headerTitleStyle: { fontFamily: fonts.display, fontSize: 17 },
+        contentStyle: { backgroundColor: colors.canvas },
       }}
     >
-      <Stack.Screen name="index" options={{ title: "Sintonía" }} />
-      <Stack.Screen name="log" options={{ title: "Registro diario" }} />
-      <Stack.Screen name="link" options={{ title: "Vincular pareja" }} />
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="log" options={{ title: "Registro de hoy" }} />
+      <Stack.Screen name="link" options={{ title: "Vincular" }} />
       <Stack.Screen name="partner" options={{ title: "Su ciclo" }} />
       <Stack.Screen name="pregnancy-setup" options={{ title: "Modo embarazo" }} />
       <Stack.Screen name="health-report" options={{ title: "Reporte de salud" }} />

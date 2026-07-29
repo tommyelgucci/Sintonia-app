@@ -1,24 +1,18 @@
 import { useEffect, useState } from "react";
-import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { notify } from "@/lib/notify";
 import { listCycles, listDailyLogs } from "@/lib/db";
 import { buildHealthReport, type HealthReportData } from "@/lib/healthReport";
 import { buildHealthReportHtml } from "@/lib/healthReportHtml";
 import { exportHealthReport, PopupBlockedError } from "@/lib/healthReportExport";
+import { colors, radius, space, type } from "@/lib/theme";
+import { Card, Eyebrow, FadeInView, PrimaryButton } from "@/lib/ui";
+import { ShieldIcon } from "@/lib/icons";
 
 const RANGE_OPTIONS = [3, 6, 12];
 
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10);
-}
-
-// Alert.alert es un no-op en react-native-web (ver la nota en
-// pregnancy-setup.tsx) — en web usamos window.alert en su lugar.
-function notify(title: string, message: string) {
-  if (Platform.OS === "web") {
-    window.alert(`${title}\n\n${message}`);
-    return;
-  }
-  Alert.alert(title, message);
 }
 
 export default function HealthReportScreen() {
@@ -40,8 +34,7 @@ export default function HealthReportScreen() {
     if (!report) return;
     setExporting(true);
     try {
-      const html = buildHealthReportHtml(report, todayStr());
-      await exportHealthReport(html);
+      await exportHealthReport(buildHealthReportHtml(report, todayStr()));
     } catch (err) {
       if (err instanceof PopupBlockedError) {
         notify("No se pudo abrir el reporte", err.message);
@@ -54,60 +47,97 @@ export default function HealthReportScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.body}>
-        Un resumen de tus ciclos pensado para mostrarle a un profesional: duración
-        promedio, variación, irregularidades y los síntomas y estados de ánimo más
-        frecuentes. Se genera en el dispositivo — no pasa por ningún servidor.
-      </Text>
+    <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <FadeInView>
+        <Eyebrow>Reporte</Eyebrow>
+        <Text style={[type.title, styles.pageTitle]}>Para llevar a la consulta</Text>
+        <Text style={[type.body, { color: colors.inkSoft }]}>
+          Un resumen de tus ciclos en una hoja: duración promedio, variación y los
+          síntomas más frecuentes.
+        </Text>
+      </FadeInView>
 
-      <View style={styles.chipRow}>
-        {RANGE_OPTIONS.map((months) => (
-          <Pressable
-            key={months}
-            onPress={() => setRangeMonths(months)}
-            style={[styles.chip, rangeMonths === months && styles.chipSelected]}
-          >
-            <Text style={[styles.chipText, rangeMonths === months && styles.chipTextSelected]}>
-              {months} meses
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      <FadeInView index={1}>
+        <View style={styles.privacyRow}>
+          <ShieldIcon size={18} color={colors.folicular} />
+          <Text style={[type.bodySmall, { color: colors.inkSoft, flex: 1 }]}>
+            Se arma en tu dispositivo. No pasa por ningún servidor.
+          </Text>
+        </View>
+      </FadeInView>
+
+      <Card index={2}>
+        <Eyebrow>Período a incluir</Eyebrow>
+        <View style={styles.chipWrap}>
+          {RANGE_OPTIONS.map((months) => (
+            <Pressable
+              key={months}
+              onPress={() => setRangeMonths(months)}
+              style={({ pressed }) => [
+                styles.chip,
+                rangeMonths === months && styles.chipSelected,
+                pressed && { opacity: 0.82 },
+              ]}
+            >
+              <Text
+                style={[
+                  type.bodySmall,
+                  { color: rangeMonths === months ? colors.onDark : colors.inkSoft },
+                ]}
+              >
+                {months} meses
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </Card>
 
       {loading || !report ? (
-        <Text style={styles.body}>Calculando...</Text>
+        <Text style={[type.body, styles.stateText]}>Calculando...</Text>
       ) : report.cycleCount === 0 ? (
-        <Text style={styles.body}>
-          No hay ciclos registrados en este rango todavía. Registrá al menos un
-          período para poder generar el reporte.
-        </Text>
+        <Card index={3}>
+          <Text style={[type.body, { color: colors.inkSoft }]}>
+            No hay ciclos registrados en este rango todavía. Con un período cargado ya
+            se puede generar el reporte.
+          </Text>
+        </Card>
       ) : (
         <>
-          <View style={styles.previewCard}>
-            <PreviewRow label="Ciclos registrados" value={String(report.cycleCount)} />
-            <PreviewRow
-              label="Duración promedio de ciclo"
-              value={report.avgCycleLength !== null ? `${report.avgCycleLength} días` : "—"}
-            />
-            <PreviewRow
-              label="Rango (mín. – máx.)"
-              value={
-                report.minCycleLength !== null
-                  ? `${report.minCycleLength}–${report.maxCycleLength} días`
-                  : "—"
-              }
-            />
+          <Card index={3}>
+            <Eyebrow>Vista previa</Eyebrow>
+            <View style={styles.previewList}>
+              <PreviewRow label="Ciclos registrados" value={String(report.cycleCount)} />
+              <PreviewRow
+                label="Duración promedio"
+                value={report.avgCycleLength !== null ? `${report.avgCycleLength} días` : "—"}
+              />
+              <PreviewRow
+                label="Variación"
+                value={
+                  report.minCycleLength !== null
+                    ? `${report.minCycleLength} a ${report.maxCycleLength} días`
+                    : "—"
+                }
+              />
+            </View>
             {report.isIrregular && (
-              <Text style={styles.flagText}>La duración del ciclo varió bastante en este rango.</Text>
+              <View style={styles.flagBox}>
+                <Text style={[type.bodySmall, { color: colors.clayDeep }]}>
+                  La duración varió bastante entre ciclos. Es un dato útil para
+                  comentarle a un profesional — no significa por sí solo que haya algo
+                  mal.
+                </Text>
+              </View>
             )}
-          </View>
+          </Card>
 
-          <Pressable style={styles.primaryButton} onPress={handleExport} disabled={exporting}>
-            <Text style={styles.primaryButtonText}>
-              {exporting ? "Generando..." : "Exportar / compartir PDF"}
-            </Text>
-          </Pressable>
+          <FadeInView index={4}>
+            <PrimaryButton
+              label={exporting ? "Generando..." : "Exportar PDF"}
+              onPress={handleExport}
+              disabled={exporting}
+            />
+          </FadeInView>
         </>
       )}
     </ScrollView>
@@ -117,36 +147,44 @@ export default function HealthReportScreen() {
 function PreviewRow({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.previewRow}>
-      <Text style={styles.previewLabel}>{label}</Text>
-      <Text style={styles.previewValue}>{value}</Text>
+      <Text style={[type.body, { color: colors.inkSoft }]}>{label}</Text>
+      <Text style={[type.cardTitle, { color: colors.ink }]}>{value}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, gap: 16 },
-  body: { color: "#555", fontSize: 13, lineHeight: 18 },
-  chipRow: { flexDirection: "row", gap: 8 },
+  scroll: {
+    padding: space.lg,
+    gap: space.md,
+    paddingBottom: space.xxl,
+    backgroundColor: colors.canvas,
+  },
+  pageTitle: { color: colors.ink, marginTop: space.xs, marginBottom: space.xs },
+  privacyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space.md,
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.md,
+    padding: space.md,
+  },
+  chipWrap: { flexDirection: "row", gap: space.sm, marginTop: space.md },
   chip: {
     borderWidth: 1,
-    borderColor: "#D8CFEF",
-    borderRadius: 20,
+    borderColor: colors.line,
+    borderRadius: radius.pill,
     paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingHorizontal: space.lg,
   },
-  chipSelected: { backgroundColor: "#7B61FF", borderColor: "#7B61FF" },
-  chipText: { color: "#2C1A4D", fontSize: 13 },
-  chipTextSelected: { color: "#fff", fontWeight: "600" },
-  previewCard: { backgroundColor: "#F4F1FA", borderRadius: 14, padding: 16, gap: 10 },
-  previewRow: { flexDirection: "row", justifyContent: "space-between" },
-  previewLabel: { color: "#555", fontSize: 13 },
-  previewValue: { color: "#2C1A4D", fontSize: 13, fontWeight: "700" },
-  flagText: { color: "#C2185B", fontSize: 12, fontWeight: "600" },
-  primaryButton: {
-    backgroundColor: "#2C1A4D",
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: "center",
+  chipSelected: { backgroundColor: colors.clay, borderColor: colors.clay },
+  previewList: { marginTop: space.md, gap: space.md },
+  previewRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  flagBox: {
+    backgroundColor: "#F5E9E3",
+    borderRadius: radius.md,
+    padding: space.md,
+    marginTop: space.lg,
   },
-  primaryButtonText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+  stateText: { color: colors.inkSoft, textAlign: "center", paddingVertical: space.xl },
 });
