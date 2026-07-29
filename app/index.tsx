@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "expo-router";
+import { useCallback, useState } from "react";
+import { Link, useFocusEffect } from "expo-router";
 import {
   ActivityIndicator,
   Pressable,
@@ -11,7 +11,10 @@ import {
 import { addCycleStart } from "@/lib/db";
 import { pushCycleToCloud } from "@/lib/sync";
 import { useCyclePrediction } from "@/lib/useCyclePrediction";
+import { usePregnancy } from "@/lib/usePregnancy";
+import { getWeekContent } from "@/lib/pregnancyContent";
 import type { CyclePhase } from "@/lib/cycle";
+import type { Trimester } from "@/lib/pregnancy";
 
 const PHASE_LABELS: Record<CyclePhase, string> = {
   menstrual: "Menstrual",
@@ -27,13 +30,37 @@ const PHASE_COLORS: Record<CyclePhase, string> = {
   lutea: "#F2994A",
 };
 
+const TRIMESTER_LABELS: Record<Trimester, string> = {
+  primero: "Primer trimestre",
+  segundo: "Segundo trimestre",
+  tercero: "Tercer trimestre",
+};
+
+const TRIMESTER_COLORS: Record<Trimester, string> = {
+  primero: "#7B61FF",
+  segundo: "#5B4B9A",
+  tercero: "#2C1A4D",
+};
+
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
 export default function HomeScreen() {
-  const { loading, prediction, isEstimated, hasAnyData, reload } = useCyclePrediction();
+  const cycle = useCyclePrediction();
+  const pregnancy = usePregnancy();
   const [saving, setSaving] = useState(false);
+
+  // index.tsx es la pantalla raíz: nunca se desmonta al navegar a log/link/
+  // pregnancy-setup y volver, así que el useEffect de cada hook no se
+  // vuelve a disparar solo. Sin esto, activar el modo embarazo y volver
+  // seguía mostrando el estado de ciclo viejo.
+  useFocusEffect(
+    useCallback(() => {
+      cycle.reload();
+      pregnancy.reload();
+    }, [cycle.reload, pregnancy.reload])
+  );
 
   async function markPeriodStartToday() {
     setSaving(true);
@@ -41,13 +68,13 @@ export default function HomeScreen() {
       const start = todayStr();
       await addCycleStart(start);
       await pushCycleToCloud({ startDate: start, periodLength: null });
-      await reload();
+      await cycle.reload();
     } finally {
       setSaving(false);
     }
   }
 
-  if (loading) {
+  if (cycle.loading || pregnancy.loading) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator color="#7B61FF" />
@@ -55,7 +82,56 @@ export default function HomeScreen() {
     );
   }
 
-  if (!hasAnyData || !prediction) {
+  if (pregnancy.progress) {
+    const { week, dayOfWeek, trimester, dueDate, daysUntilDueDate } = pregnancy.progress;
+    const content = getWeekContent(week);
+    const trimesterColor = TRIMESTER_COLORS[trimester];
+
+    return (
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={[styles.phaseCard, { backgroundColor: trimesterColor }]}>
+          <Text style={styles.phaseLabel}>
+            Semana {week}{dayOfWeek > 0 ? ` + ${dayOfWeek} días` : ""}
+          </Text>
+          <Text style={styles.cycleDay}>{TRIMESTER_LABELS[trimester]}</Text>
+        </View>
+
+        <View style={styles.infoRow}>
+          <InfoTile
+            label="Fecha probable de parto"
+            value={dueDate}
+            sub={daysUntilDueDate >= 0 ? `en ${daysUntilDueDate} días` : "ya pasó la fecha"}
+          />
+          <InfoTile label="Tu bebé es del tamaño de" value={content.sizeComparison} />
+        </View>
+
+        <View style={styles.weekContentCard}>
+          <Text style={styles.weekContentText}>{content.blurb}</Text>
+        </View>
+
+        <View style={styles.navRow}>
+          <Link href="/log" asChild>
+            <Pressable style={styles.secondaryButton}>
+              <Text style={styles.secondaryButtonText}>Registrar síntomas de hoy</Text>
+            </Pressable>
+          </Link>
+          <Link href="/link" asChild>
+            <Pressable style={styles.secondaryButton}>
+              <Text style={styles.secondaryButtonText}>Vincular pareja</Text>
+            </Pressable>
+          </Link>
+        </View>
+
+        <Link href="/pregnancy-setup" asChild>
+          <Pressable>
+            <Text style={styles.linkText}>Editar fecha o salir del modo embarazo</Text>
+          </Pressable>
+        </Link>
+      </ScrollView>
+    );
+  }
+
+  if (!cycle.hasAnyData || !cycle.prediction) {
     return (
       <View style={styles.centered}>
         <Text style={styles.emptyTitle}>Empecemos</Text>
@@ -68,10 +144,16 @@ export default function HomeScreen() {
             {saving ? "Guardando..." : "Mi período empezó hoy"}
           </Text>
         </Pressable>
+        <Link href="/pregnancy-setup" asChild>
+          <Pressable>
+            <Text style={styles.linkText}>¿Estás embarazada?</Text>
+          </Pressable>
+        </Link>
       </View>
     );
   }
 
+  const { prediction, isEstimated } = cycle;
   const phaseColor = PHASE_COLORS[prediction.phase];
 
   return (
@@ -118,6 +200,12 @@ export default function HomeScreen() {
           </Pressable>
         </Link>
       </View>
+
+      <Link href="/pregnancy-setup" asChild>
+        <Pressable>
+          <Text style={styles.linkText}>¿Estás embarazada?</Text>
+        </Pressable>
+      </Link>
     </ScrollView>
   );
 }
@@ -163,4 +251,7 @@ const styles = StyleSheet.create({
     borderColor: "#D8CFEF",
   },
   secondaryButtonText: { color: "#2C1A4D", fontWeight: "600", fontSize: 13 },
+  weekContentCard: { backgroundColor: "#F4F1FA", borderRadius: 14, padding: 16 },
+  weekContentText: { color: "#2C1A4D", fontSize: 14, lineHeight: 20 },
+  linkText: { color: "#7B61FF", fontSize: 13, fontWeight: "600", textAlign: "center" },
 });
