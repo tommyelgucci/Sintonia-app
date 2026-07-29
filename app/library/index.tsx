@@ -10,9 +10,16 @@ const CATEGORY_TINTS: Record<ArticleCategory, string> = {
   anticoncepcion: "#E8E0EA",
   calma: "#E1E9DD",
   condiciones: "#F5E7D2",
+  fertilidad: "#DCE7DE",
 };
 
-const CATEGORY_ORDER: ArticleCategory[] = ["cuerpo", "calma", "anticoncepcion", "condiciones"];
+const CATEGORY_ORDER: ArticleCategory[] = [
+  "cuerpo",
+  "calma",
+  "fertilidad",
+  "anticoncepcion",
+  "condiciones",
+];
 
 export default function LibraryScreen() {
   const router = useRouter();

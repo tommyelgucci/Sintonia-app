@@ -85,3 +85,11 @@ export async function getPregnancyLmp(): Promise<string | null> {
 export async function clearPregnancy(): Promise<void> {
   await AsyncStorage.removeItem(PREGNANCY_KEY);
 }
+
+export async function setPreference(key: string, value: string): Promise<void> {
+  await AsyncStorage.setItem(`sintonia_pref_${key}`, value);
+}
+
+export async function getPreference(key: string): Promise<string | null> {
+  return AsyncStorage.getItem(`sintonia_pref_${key}`);
+}

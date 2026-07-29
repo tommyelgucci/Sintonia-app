@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useRouter } from "expo-router";
+import { goBackOrHome } from "@/lib/nav";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { getDailyLog, upsertDailyLog } from "@/lib/db";
 import { pushDailyLogToCloud } from "@/lib/sync";
@@ -50,7 +50,6 @@ function toggle(list: string[], value: string): string[] {
 }
 
 export default function LogScreen() {
-  const router = useRouter();
   const logDate = todayStr();
   const [flow, setFlow] = useState<FlowIntensity>("none");
   const [symptoms, setSymptoms] = useState<string[]>([]);
@@ -74,7 +73,7 @@ export default function LogScreen() {
       const log = { logDate, flow, symptoms, mood, notes: notes || null };
       await upsertDailyLog(log);
       await pushDailyLogToCloud(log);
-      router.back();
+      goBackOrHome();
     } finally {
       setSaving(false);
     }

@@ -16,7 +16,12 @@
  *    tratamiento. Se describe qué suele pasar y qué amerita consulta.
  */
 
-export type ArticleCategory = "cuerpo" | "anticoncepcion" | "calma" | "condiciones";
+export type ArticleCategory =
+  | "cuerpo"
+  | "anticoncepcion"
+  | "calma"
+  | "condiciones"
+  | "fertilidad";
 
 export interface ArticleSection {
   heading: string;
@@ -43,6 +48,7 @@ export const CATEGORY_LABELS: Record<ArticleCategory, string> = {
   anticoncepcion: "Anticoncepción",
   calma: "Calma",
   condiciones: "Condiciones",
+  fertilidad: "Fertilidad",
 };
 
 export const ARTICLES: Article[] = [
@@ -198,6 +204,43 @@ export const ARTICLES: Article[] = [
         body: "Que falten períodos tres meses seguidos sin embarazo; que los ciclos pasen a durar menos de 21 o más de 35 días de forma sostenida; sangrado entre períodos que se repite; o un cambio marcado respecto de lo que era tu normal. Nada de eso significa que haya algo grave, pero son los patrones que ameritan que alguien los mire. El reporte que exporta esta app está pensado justo para esa conversación.",
       },
     ],
+  },
+  {
+    id: "buscar-embarazo",
+    category: "fertilidad",
+    title: "Buscar embarazo: cuándo es más probable",
+    summary:
+      "Cómo funciona la ventana fértil, qué tan confiable es predecirla por calendario y cuándo conviene consultar.",
+    readingMinutes: 5,
+    sections: [
+      {
+        heading: "La ventana no es el día de la ovulación",
+        body: "Se suele pensar que hay que apuntar al día exacto de ovular, y en realidad los días previos rinden más. Los espermatozoides sobreviven hasta unos cinco días en el tracto, así que los que llegaron antes esperan al óvulo. El óvulo, en cambio, dura cerca de 24 horas. Por eso la ventana se abre unos cinco días antes de ovular y se cierra enseguida después: es asimétrica, y el lado largo está antes.",
+      },
+      {
+        heading: "Dónde están las mejores chances",
+        body: "Dentro de esa ventana, la probabilidad no se reparte pareja. Los dos días previos a la ovulación y el día mismo concentran la mayor parte. Apuntar a esos días, o simplemente tener relaciones cada uno o dos días durante toda la ventana, es lo que muestra mejores resultados — y esto último ahorra la presión de tener que acertarle a una fecha.",
+      },
+      {
+        heading: "Qué tan confiable es esta predicción",
+        body: "Es una estimación a partir de tus ciclos anteriores, y conviene tomarla como tal. La ovulación real se corre bastante de un mes a otro, incluso en ciclos que parecen regulares: estudios que la midieron con hormonas encontraron que el día de ovulación varía en la mayoría de las personas. Si querés más precisión, hay dos señales que se leen del cuerpo mismo:",
+        bullets: [
+          "Moco cervical: cerca de la ovulación se vuelve transparente y elástico, parecido a la clara de huevo. Es la señal que anticipa, no la que confirma.",
+          "Temperatura basal: sube unas décimas después de ovular. Confirma que pasó, no avisa antes — sirve para conocer tu patrón a lo largo de varios ciclos.",
+          "Tests de ovulación en orina: detectan el pico de LH, que precede a la ovulación por unas 36 horas.",
+        ],
+      },
+      {
+        heading: "Cuánto es normal que tarde",
+        body: "Alrededor del 85% de las parejas concibe dentro del primer año intentando. Que no pase en dos o tres meses es completamente esperable y no significa nada. Eso sí, si tenés menos de 35 años y pasó un año sin lograrlo, o si tenés 35 o más y pasaron seis meses, esa es la marca en la que conviene consultar — no porque haya algo mal, sino porque los estudios iniciales son simples y empezar antes amplía las opciones. Si tus ciclos son muy irregulares o ausentes, conviene consultar sin esperar ese plazo.",
+      },
+      {
+        heading: "Lo que esta pantalla no es",
+        body: "Este cálculo sirve para orientar la búsqueda de embarazo, no para evitarlo. Como método anticonceptivo el calendario falla seguido, justamente porque la ovulación se mueve y los espermatozoides duran varios días. No hay 'días seguros' confiables acá, y por eso la app no los muestra.",
+      },
+    ],
+    footnote:
+      "Registrar unos meses de ciclos antes de la consulta le da a quien te atienda bastante más con qué trabajar.",
   },
   {
     id: "sop",

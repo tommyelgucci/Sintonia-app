@@ -6,6 +6,8 @@ import { addCycleStart } from "@/lib/db";
 import { pushCycleToCloud } from "@/lib/sync";
 import { useCyclePrediction } from "@/lib/useCyclePrediction";
 import { usePregnancy } from "@/lib/usePregnancy";
+import { useIntention } from "@/lib/useIntention";
+import { getFertilityInfo, FERTILITY_COPY } from "@/lib/fertility";
 import { getWeekContent } from "@/lib/pregnancyContent";
 import { PHASE_NOTES } from "@/lib/phaseNotes";
 import { formatDateEs, greetingForHour } from "@/lib/format";
@@ -81,6 +83,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const cycle = useCyclePrediction();
   const pregnancy = usePregnancy();
+  const intentionState = useIntention();
   const [saving, setSaving] = useState(false);
 
   // index.tsx es la pantalla raíz: nunca se desmonta al navegar a otra y
@@ -89,7 +92,8 @@ export default function HomeScreen() {
     useCallback(() => {
       cycle.reload();
       pregnancy.reload();
-    }, [cycle.reload, pregnancy.reload])
+      intentionState.reload();
+    }, [cycle.reload, pregnancy.reload, intentionState.reload])
   );
 
   async function markPeriodStartToday() {
@@ -106,7 +110,7 @@ export default function HomeScreen() {
 
   const greeting = greetingForHour(new Date().getHours());
 
-  if (cycle.loading || pregnancy.loading) {
+  if (cycle.loading || pregnancy.loading || intentionState.loading) {
     return (
       <View style={styles.loadingScreen}>
         <ActivityIndicator color={colors.clay} />
@@ -198,7 +202,7 @@ export default function HomeScreen() {
           {sharedActions(4)}
 
           <QuietButton
-            label="Editar fecha o salir del modo embarazo"
+            label="Editar fecha o cambiar objetivo"
             onPress={() => router.push("/pregnancy-setup")}
           />
         </ScrollView>
@@ -236,8 +240,8 @@ export default function HomeScreen() {
           </Card>
 
           <QuietButton
-            label="Estoy embarazada"
-            onPress={() => router.push("/pregnancy-setup")}
+            label="Buscando embarazo o ya embarazada"
+            onPress={() => router.push("/intention")}
           />
         </ScrollView>
       </SafeAreaView>
@@ -250,29 +254,79 @@ export default function HomeScreen() {
   const suggestion = PHASE_SUGGESTION[prediction.phase];
   const cycleLength = prediction.cycleDay + prediction.daysUntilNextPeriod;
 
+  const conceiving = intentionState.intention === "conceiving";
+  const fertility = conceiving ? getFertilityInfo(prediction, todayStr()) : null;
+
   return (
     <SafeAreaView style={styles.screen} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <HeroCard gradient={colors.gradients[prediction.phase]}>
-          <Eyebrow tone="onDark">{greeting}</Eyebrow>
-          <View style={styles.heroTitleRow}>
-            <Text style={[type.hero, styles.heroTitle]}>
-              {PHASE_LABELS[prediction.phase]}
+        {fertility ? (
+          // Buscando embarazo, el dato que importa es la ventana fértil,
+          // no en qué fase está — la fase pasa a la tarjeta de abajo.
+          <HeroCard
+            gradient={
+              fertility.status === "peak" || fertility.status === "fertile"
+                ? colors.gradients.folicular
+                : colors.gradients.plum
+            }
+          >
+            <Eyebrow tone="onDark">{greeting}</Eyebrow>
+            <View style={styles.heroTitleRow}>
+              <Text style={[type.heroCompact, styles.heroTitle, { flex: 1 }]}>
+                {fertility.status === "approaching"
+                  ? `En ${fertility.daysUntilWindow} ${fertility.daysUntilWindow === 1 ? "día" : "días"}`
+                  : FERTILITY_COPY[fertility.status].title}
+              </Text>
+              <SproutIcon size={28} color={colors.onDarkSoft} />
+            </View>
+            <Text style={[type.body, { color: colors.onDarkSoft }]}>
+              {FERTILITY_COPY[fertility.status].detail}
             </Text>
-            <PhaseIcon size={30} color={colors.onDarkSoft} />
-          </View>
-          <Text style={[type.body, { color: colors.onDarkSoft }]}>
-            Día {prediction.cycleDay} del ciclo
-          </Text>
 
-          <View style={styles.heroSpacer} />
-          <ProgressBar
-            ratio={prediction.cycleDay / Math.max(cycleLength, 1)}
-            label={`Día ${prediction.cycleDay} de ~${cycleLength}`}
-          />
-        </HeroCard>
+            <View style={styles.heroSpacer} />
+            <ProgressBar
+              ratio={prediction.cycleDay / Math.max(cycleLength, 1)}
+              label={`Ventana: ${formatDateEs(prediction.fertileWindowStart)} al ${formatDateEs(prediction.fertileWindowEnd)}`}
+            />
+          </HeroCard>
+        ) : (
+          <HeroCard gradient={colors.gradients[prediction.phase]}>
+            <Eyebrow tone="onDark">{greeting}</Eyebrow>
+            <View style={styles.heroTitleRow}>
+              <Text style={[type.hero, styles.heroTitle]}>
+                {PHASE_LABELS[prediction.phase]}
+              </Text>
+              <PhaseIcon size={30} color={colors.onDarkSoft} />
+            </View>
+            <Text style={[type.body, { color: colors.onDarkSoft }]}>
+              Día {prediction.cycleDay} del ciclo
+            </Text>
 
-        <Card index={1}>
+            <View style={styles.heroSpacer} />
+            <ProgressBar
+              ratio={prediction.cycleDay / Math.max(cycleLength, 1)}
+              label={`Día ${prediction.cycleDay} de ~${cycleLength}`}
+            />
+          </HeroCard>
+        )}
+
+        {conceiving && (
+          <FadeInView index={1}>
+            <Pressable
+              onPress={() => router.push("/library/buscar-embarazo")}
+              style={({ pressed }) => [styles.suggestion, pressed && { opacity: 0.9 }]}
+            >
+              <BookIcon size={20} color={colors.clayDeep} />
+              <Text style={[type.bodySmall, { color: colors.ink, flex: 1 }]}>
+                Esta ventana es una estimación de tus ciclos previos. Cómo leerla y
+                qué la hace más precisa.
+              </Text>
+              <ChevronRightIcon size={16} color={colors.clay} />
+            </Pressable>
+          </FadeInView>
+        )}
+
+        <Card index={2}>
           <Eyebrow>Lo que está pasando</Eyebrow>
           <Text style={[type.section, styles.cardHeading]}>{note.title}</Text>
           <Text style={[type.body, { color: colors.inkSoft }]}>{note.body}</Text>
@@ -286,7 +340,7 @@ export default function HomeScreen() {
         </Card>
 
         {suggestion && (
-          <FadeInView index={2}>
+          <FadeInView index={3}>
             <Pressable
               onPress={() => router.push(`/library/${suggestion.articleId}`)}
               style={({ pressed }) => [styles.suggestion, pressed && { opacity: 0.9 }]}
@@ -300,7 +354,7 @@ export default function HomeScreen() {
           </FadeInView>
         )}
 
-        <FadeInView index={3}>
+        <FadeInView index={4}>
           <View style={styles.statRow}>
             <Stat
               label="Próximo período"
@@ -316,7 +370,7 @@ export default function HomeScreen() {
         </FadeInView>
 
         {isEstimated && (
-          <FadeInView index={4}>
+          <FadeInView index={5}>
             <Text style={[type.bodySmall, styles.estimateNote]}>
               Estimado sobre un ciclo de 28 días. Se ajusta solo a medida que
               registrás más períodos.
@@ -324,23 +378,23 @@ export default function HomeScreen() {
           </FadeInView>
         )}
 
-        <FadeInView index={5}>
+        <FadeInView index={6}>
           <Eyebrow>Ahora</Eyebrow>
         </FadeInView>
 
         <ActionRow
-          index={6}
+          index={7}
           icon={<CalendarPlusIcon size={21} color={colors.clayDeep} />}
           tint="#F0E2DA"
           title="Mi período empezó hoy"
           subtitle={saving ? "Guardando..." : "Ajusta la predicción al instante"}
           onPress={markPeriodStartToday}
         />
-        {sharedActions(7)}
+        {sharedActions(8)}
 
         <QuietButton
-          label="Estoy embarazada"
-          onPress={() => router.push("/pregnancy-setup")}
+          label={conceiving ? "Cambiar objetivo" : "Buscando embarazo o ya embarazada"}
+          onPress={() => router.push("/intention")}
         />
       </ScrollView>
     </SafeAreaView>
@@ -366,7 +420,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   scroll: { padding: space.lg, gap: space.md, paddingBottom: space.xxl },
-  heroTitle: { color: colors.onDark, marginTop: space.sm },
+  heroTitle: { color: colors.onDark, marginTop: space.sm, marginBottom: space.xs },
   heroTitleRow: {
     flexDirection: "row",
     alignItems: "center",
