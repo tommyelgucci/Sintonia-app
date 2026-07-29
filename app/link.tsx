@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "expo-router";
+import { Link, useLocalSearchParams } from "expo-router";
 import {
   ActivityIndicator,
   Alert,
@@ -66,12 +66,20 @@ async function ensureSessionAndProfile(): Promise<string> {
 }
 
 export default function LinkScreen() {
+  // Cuando se abre vía el link/QR (sintonia://link?code=ABCD1234), expo-router
+  // resuelve la ruta "/link" y expone "code" acá — no hace falta un listener
+  // de deep link aparte, el router ya se encarga del scheme.
+  const { code: incomingCode } = useLocalSearchParams<{ code?: string }>();
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [redeemCode, setRedeemCode] = useState("");
   const [redeeming, setRedeeming] = useState(false);
   const [connections, setConnections] = useState<Connection[]>([]);
+
+  useEffect(() => {
+    if (incomingCode) setRedeemCode(incomingCode.toUpperCase());
+  }, [incomingCode]);
 
   const loadConnections = useCallback(async (uid: string) => {
     const { data: conns } = await supabase
@@ -232,7 +240,7 @@ export default function LinkScreen() {
         </Text>
         {inviteCode ? (
           <View style={styles.qrBox}>
-            <QRCode value={`sintonia://link/${inviteCode}`} size={180} />
+            <QRCode value={`sintonia://link?code=${inviteCode}`} size={180} />
             <Text style={styles.codeText}>{inviteCode}</Text>
           </View>
         ) : (
