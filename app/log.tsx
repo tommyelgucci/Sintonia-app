@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { getDailyLog, upsertDailyLog } from "@/lib/db";
+import { pushDailyLogToCloud } from "@/lib/sync";
 import type { FlowIntensity } from "@/lib/types";
 
 const FLOW_OPTIONS: { value: FlowIntensity; label: string }[] = [
@@ -60,7 +61,9 @@ export default function LogScreen() {
   async function save() {
     setSaving(true);
     try {
-      await upsertDailyLog({ logDate, flow, symptoms, mood, notes: notes || null });
+      const log = { logDate, flow, symptoms, mood, notes: notes || null };
+      await upsertDailyLog(log);
+      await pushDailyLogToCloud(log);
       router.back();
     } finally {
       setSaving(false);

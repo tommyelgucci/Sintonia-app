@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link, useLocalSearchParams } from "expo-router";
 import {
   ActivityIndicator,
   Alert,
@@ -65,12 +66,20 @@ async function ensureSessionAndProfile(): Promise<string> {
 }
 
 export default function LinkScreen() {
+  // Cuando se abre vía el link/QR (sintonia://link?code=ABCD1234), expo-router
+  // resuelve la ruta "/link" y expone "code" acá — no hace falta un listener
+  // de deep link aparte, el router ya se encarga del scheme.
+  const { code: incomingCode } = useLocalSearchParams<{ code?: string }>();
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [redeemCode, setRedeemCode] = useState("");
   const [redeeming, setRedeeming] = useState(false);
   const [connections, setConnections] = useState<Connection[]>([]);
+
+  useEffect(() => {
+    if (incomingCode) setRedeemCode(incomingCode.toUpperCase());
+  }, [incomingCode]);
 
   const loadConnections = useCallback(async (uid: string) => {
     const { data: conns } = await supabase
@@ -231,7 +240,7 @@ export default function LinkScreen() {
         </Text>
         {inviteCode ? (
           <View style={styles.qrBox}>
-            <QRCode value={`sintonia://link/${inviteCode}`} size={180} />
+            <QRCode value={`sintonia://link?code=${inviteCode}`} size={180} />
             <Text style={styles.codeText}>{inviteCode}</Text>
           </View>
         ) : (
@@ -263,6 +272,17 @@ export default function LinkScreen() {
           {connections.map((c) => (
             <View key={c.connectionId} style={styles.connectionCard}>
               <Text style={styles.connectionName}>{c.displayName}</Text>
+              <Link
+                href={{
+                  pathname: "/partner",
+                  params: { partnerId: c.partnerId, displayName: c.displayName },
+                }}
+                asChild
+              >
+                <Pressable style={styles.viewButton}>
+                  <Text style={styles.viewButtonText}>Ver su ciclo</Text>
+                </Pressable>
+              </Link>
               <ShareRow
                 label="Fechas de ciclo"
                 value={c.shareCycleDates}
@@ -333,6 +353,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   connectionName: { fontSize: 15, fontWeight: "700", color: "#2C1A4D" },
+  viewButton: {
+    borderRadius: 12,
+    paddingVertical: 8,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#7B61FF",
+  },
+  viewButtonText: { color: "#7B61FF", fontWeight: "600", fontSize: 13 },
   shareRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   shareLabel: { fontSize: 13, color: "#555" },
 });
