@@ -141,7 +141,7 @@ export default function HomeScreen() {
         icon={<BookIcon size={21} color="#6B4C71" />}
         tint="#E8E0EA"
         title="Aprender"
-        subtitle="Dolor, anticonceptivos, SOP y más"
+        subtitle="Dolor, anticonceptivos, SOMP y más"
         onPress={() => router.push("/library")}
       />
       <ActionRow

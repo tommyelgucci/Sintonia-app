@@ -243,16 +243,24 @@ export const ARTICLES: Article[] = [
       "Registrar unos meses de ciclos antes de la consulta le da a quien te atienda bastante más con qué trabajar.",
   },
   {
-    id: "sop",
+    id: "somp",
     category: "condiciones",
-    title: "SOP: qué es realmente y cómo se diagnostica",
+    title: "SOMP, el nuevo nombre del SOP: qué cambió y qué no",
     summary:
-      "El nombre confunde más de lo que explica. Qué se evalúa, por qué es metabólico y qué se puede hacer.",
-    readingMinutes: 5,
+      "Desde mayo de 2026 el síndrome de ovario poliquístico se llama distinto. Por qué cambió, cómo se diagnostica y qué se puede hacer.",
+    readingMinutes: 6,
     sections: [
       {
-        heading: "El nombre es engañoso",
-        body: "Se llama síndrome de ovario poliquístico, pero los 'quistes' no son quistes: son folículos, estructuras normales que quedaron detenidas sin llegar a ovular. Y no hace falta tenerlos para tener el síndrome — se puede diagnosticar sin ningún hallazgo en la ecografía. Por eso hay un debate internacional activo entre especialistas para renombrarlo con un término que refleje que es un cuadro hormonal y metabólico, no un problema de quistes en el ovario. Si ves nombres nuevos circulando en artículos recientes, es por eso.",
+        heading: "Cambió el nombre, no el diagnóstico",
+        body: "En mayo de 2026 se publicó en The Lancet un consenso global que le cambió el nombre: lo que se conocía como síndrome de ovario poliquístico (SOP) pasó a llamarse síndrome ovárico metabólico poliendocrino — SOMP en español, PMOS en inglés. No lo decidió un grupo chico: participaron 56 organizaciones académicas, clínicas y de pacientes, con encuestas que respondieron más de 14.300 personas con el síndrome y profesionales de todas las regiones del mundo.",
+      },
+      {
+        heading: "Por qué el nombre viejo hacía daño",
+        body: "Porque describía mal lo que pasa. Los 'quistes' que se ven en la ecografía no son quistes: son folículos detenidos, estructuras normales que no llegaron a ovular. Y ni siquiera hacen falta para tener el síndrome — se diagnostica sin ningún hallazgo ecográfico. El problema no era estético: el consenso señala que ese nombre venía retrasando diagnósticos, fragmentando la atención y sosteniendo estigma, porque enfocaba en el ovario un cuadro que es hormonal y metabólico. El nombre nuevo lo dice: poliendocrino por los varios ejes hormonales, metabólico por el peso cardiometabólico, y ovárico porque el ovario sigue estando involucrado.",
+      },
+      {
+        heading: "Si tu diagnóstico dice SOP",
+        body: "Sigue siendo válido y no hay que rehacer nada. Es la misma condición con otro nombre, y durante un tiempo vas a ver los dos términos conviviendo: en estudios viejos, en historias clínicas, en la mayoría de los buscadores. Si buscás información, probá con los dos. Y si quien te atiende todavía dice SOP, no significa que esté desactualizado: los cambios de nomenclatura tardan años en asentarse en la práctica.",
       },
       {
         heading: "Cómo se diagnostica",
@@ -265,15 +273,15 @@ export const ARTICLES: Article[] = [
       },
       {
         heading: "Por qué es metabólico y no solo ginecológico",
-        body: "En buena parte de los casos hay resistencia a la insulina por detrás: el cuerpo produce más insulina para lograr el mismo efecto, y esa insulina alta estimula al ovario a producir más andrógenos, lo que a su vez interfiere con la ovulación. Es un circuito, y entender que arranca en el metabolismo explica por qué el abordaje no es solo hormonal y por qué se controla también azúcar, presión y lípidos. Esto además pasa en personas de cualquier peso — el SOP en cuerpos delgados existe y se diagnostica todavía más tarde.",
+        body: "En buena parte de los casos hay resistencia a la insulina por detrás: el cuerpo produce más insulina para lograr el mismo efecto, y esa insulina alta estimula al ovario a producir más andrógenos, lo que a su vez interfiere con la ovulación. Es un circuito, y entender que arranca en el metabolismo explica por qué el abordaje no es solo hormonal y por qué se controla también azúcar, presión y lípidos. Esto además pasa en personas de cualquier peso — el SOMP en cuerpos delgados existe y se diagnostica todavía más tarde.",
       },
       {
         heading: "Qué se puede hacer",
-        body: "Tiene tratamiento y bastantes caminos según qué te esté afectando más: regularizar ciclos, tratar el acné o el vello, mejorar la sensibilidad a la insulina, o inducir la ovulación si estás buscando embarazo. Tener SOP no significa que no puedas quedar embarazada; sí suele significar que hace falta acompañamiento para lograrlo. Lo que más rinde a largo plazo es el seguimiento sostenido, porque es un cuadro que cambia con los años.",
+        body: "Tiene tratamiento y bastantes caminos según qué te esté afectando más: regularizar ciclos, tratar el acné o el vello, mejorar la sensibilidad a la insulina, o inducir la ovulación si estás buscando embarazo. Tener SOMP no significa que no puedas quedar embarazada; sí suele significar que hace falta acompañamiento para lograrlo. Lo que más rinde a largo plazo es el seguimiento sostenido, porque es un cuadro que cambia con los años.",
       },
     ],
     footnote:
-      "Si sospechás que podrías tenerlo, registrar tus ciclos unos meses y llevar ese registro a una consulta acelera bastante el proceso.",
+      "Si sospechás que podrías tenerlo, registrar tus ciclos unos meses y llevar ese registro a una consulta acelera bastante el proceso. El nombre nuevo es de mayo de 2026, así que buena parte de lo que encuentres online todavía va a decir SOP.",
   },
 ];
 
