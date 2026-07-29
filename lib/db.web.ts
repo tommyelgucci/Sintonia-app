@@ -12,6 +12,7 @@ import type { CycleRecord, DailyLog } from "./types";
 
 const CYCLES_KEY = "sintonia_cycles";
 const DAILY_LOGS_KEY = "sintonia_daily_logs";
+const PREGNANCY_KEY = "sintonia_pregnancy";
 
 async function readCycles(): Promise<CycleRecord[]> {
   const raw = await AsyncStorage.getItem(CYCLES_KEY);
@@ -71,4 +72,16 @@ export async function getDailyLog(logDate: string): Promise<DailyLog | null> {
 export async function listDailyLogs(): Promise<DailyLog[]> {
   const logs = await readDailyLogs();
   return [...logs].sort((a, b) => b.logDate.localeCompare(a.logDate));
+}
+
+export async function setPregnancy(lmpDate: string): Promise<void> {
+  await AsyncStorage.setItem(PREGNANCY_KEY, lmpDate);
+}
+
+export async function getPregnancyLmp(): Promise<string | null> {
+  return AsyncStorage.getItem(PREGNANCY_KEY);
+}
+
+export async function clearPregnancy(): Promise<void> {
+  await AsyncStorage.removeItem(PREGNANCY_KEY);
 }
