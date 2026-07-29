@@ -127,6 +127,11 @@ export default function HomeScreen() {
             <Text style={styles.linkText}>Editar fecha o salir del modo embarazo</Text>
           </Pressable>
         </Link>
+        <Link href="/health-report" asChild>
+          <Pressable>
+            <Text style={styles.linkText}>Exportar reporte para el médico</Text>
+          </Pressable>
+        </Link>
       </ScrollView>
     );
   }
@@ -204,6 +209,11 @@ export default function HomeScreen() {
       <Link href="/pregnancy-setup" asChild>
         <Pressable>
           <Text style={styles.linkText}>¿Estás embarazada?</Text>
+        </Pressable>
+      </Link>
+      <Link href="/health-report" asChild>
+        <Pressable>
+          <Text style={styles.linkText}>Exportar reporte para el médico</Text>
         </Pressable>
       </Link>
     </ScrollView>
