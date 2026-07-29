@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "expo-router";
 import {
   ActivityIndicator,
   Alert,
@@ -263,6 +264,17 @@ export default function LinkScreen() {
           {connections.map((c) => (
             <View key={c.connectionId} style={styles.connectionCard}>
               <Text style={styles.connectionName}>{c.displayName}</Text>
+              <Link
+                href={{
+                  pathname: "/partner",
+                  params: { partnerId: c.partnerId, displayName: c.displayName },
+                }}
+                asChild
+              >
+                <Pressable style={styles.viewButton}>
+                  <Text style={styles.viewButtonText}>Ver su ciclo</Text>
+                </Pressable>
+              </Link>
               <ShareRow
                 label="Fechas de ciclo"
                 value={c.shareCycleDates}
@@ -333,6 +345,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   connectionName: { fontSize: 15, fontWeight: "700", color: "#2C1A4D" },
+  viewButton: {
+    borderRadius: 12,
+    paddingVertical: 8,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#7B61FF",
+  },
+  viewButtonText: { color: "#7B61FF", fontWeight: "600", fontSize: 13 },
   shareRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   shareLabel: { fontSize: 13, color: "#555" },
 });
