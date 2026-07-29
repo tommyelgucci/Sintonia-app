@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import type { CycleRecord } from "./types";
+import type { CycleRecord, DailyLog } from "./types";
 
 /**
  * Puente entre el almacenamiento local (fuente de verdad) y Supabase.
@@ -14,11 +14,65 @@ export async function pushCycleToCloud(cycle: CycleRecord): Promise<void> {
   } = await supabase.auth.getUser();
   if (!user) return;
 
-  await supabase.from("cycles").upsert({
-    user_id: user.id,
-    start_date: cycle.startDate,
-    period_length: cycle.periodLength,
-  });
+  // onConflict apunta al unique(user_id, start_date) del schema, no a la PK
+  // (id autogenerado): sin esto, Postgres nunca encuentra conflicto sobre
+  // "id" y cada guardado del mismo día inserta una fila nueva en vez de
+  // actualizar, hasta romper el unique constraint en el segundo intento.
+  await supabase
+    .from("cycles")
+    .upsert(
+      {
+        user_id: user.id,
+        start_date: cycle.startDate,
+        period_length: cycle.periodLength,
+      },
+      { onConflict: "user_id,start_date" }
+    );
+}
+
+export async function pushDailyLogToCloud(log: DailyLog): Promise<void> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  await supabase
+    .from("daily_logs")
+    .upsert(
+      {
+        user_id: user.id,
+        log_date: log.logDate,
+        flow: log.flow,
+        symptoms: log.symptoms,
+        mood: log.mood,
+        notes: log.notes,
+      },
+      { onConflict: "user_id,log_date" }
+    );
+}
+
+/**
+ * Últimos registros diarios de una pareja vinculada. RLS ya filtra en el
+ * server según su share_settings (share_symptoms / share_mood, ver
+ * schema.sql) — si no comparte nada, esto devuelve simplemente vacío, sin
+ * que el cliente necesite saber por qué.
+ */
+export async function fetchPartnerDailyLogs(partnerId: string): Promise<DailyLog[]> {
+  const { data, error } = await supabase
+    .from("daily_logs")
+    .select("log_date, flow, symptoms, mood, notes")
+    .eq("user_id", partnerId)
+    .order("log_date", { ascending: false })
+    .limit(14);
+  if (error || !data) return [];
+
+  return data.map((row) => ({
+    logDate: row.log_date,
+    flow: row.flow,
+    symptoms: row.symptoms ?? [],
+    mood: row.mood ?? [],
+    notes: row.notes,
+  }));
 }
 
 export interface PartnerCycleView {

@@ -16,6 +16,7 @@ export default function RootLayout() {
       <Stack.Screen name="index" options={{ title: "Sintonía" }} />
       <Stack.Screen name="log" options={{ title: "Registro diario" }} />
       <Stack.Screen name="link" options={{ title: "Vincular pareja" }} />
+      <Stack.Screen name="partner" options={{ title: "Su ciclo" }} />
     </Stack>
   );
 }
