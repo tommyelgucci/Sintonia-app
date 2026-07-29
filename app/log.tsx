@@ -1,15 +1,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { getDailyLog, upsertDailyLog } from "@/lib/db";
 import { pushDailyLogToCloud } from "@/lib/sync";
+import { formatDateEs } from "@/lib/format";
+import { colors, radius, space, type } from "@/lib/theme";
+import { Card, Eyebrow, FadeInView, PrimaryButton } from "@/lib/ui";
 import type { FlowIntensity } from "@/lib/types";
 
 const FLOW_OPTIONS: { value: FlowIntensity; label: string }[] = [
@@ -27,9 +23,23 @@ const SYMPTOM_OPTIONS = [
   "Acné",
   "Dolor de espalda",
   "Sensibilidad en pechos",
+  "Náuseas",
 ];
 
-const MOOD_OPTIONS = ["Tranquila", "Irritable", "Ansiosa", "Con energía", "Triste", "Sensible"];
+/**
+ * Los ánimos van con un tinte propio en vez de todos iguales: le da a la
+ * grilla algo para leer de un vistazo y saca la sensación de formulario.
+ * Los tonos son los de la paleta, desaturados — nada de rojo alarma para
+ * "irritable", que sería exactamente el juicio que la app no quiere hacer.
+ */
+const MOOD_OPTIONS: { label: string; tint: string }[] = [
+  { label: "Tranquila", tint: "#E1E9DD" },
+  { label: "Con energía", tint: "#F5E7D2" },
+  { label: "Sensible", tint: "#EFE1E8" },
+  { label: "Irritable", tint: "#F0E2DA" },
+  { label: "Ansiosa", tint: "#E8E0EA" },
+  { label: "Triste", tint: "#DFE3E9" },
+];
 
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10);
@@ -71,11 +81,18 @@ export default function LogScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.dateLabel}>{logDate}</Text>
+    <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <FadeInView>
+        <Eyebrow>Hoy</Eyebrow>
+        <Text style={[type.title, styles.pageTitle]}>{formatDateEs(logDate)}</Text>
+        <Text style={[type.bodySmall, { color: colors.inkSoft }]}>
+          Registrá lo que quieras. No hace falta completar todo.
+        </Text>
+      </FadeInView>
 
-      <Section title="Flujo">
-        <View style={styles.chipRow}>
+      <Card index={1}>
+        <Eyebrow>Flujo</Eyebrow>
+        <View style={styles.chipWrap}>
           {FLOW_OPTIONS.map((opt) => (
             <Chip
               key={opt.value}
@@ -85,10 +102,11 @@ export default function LogScreen() {
             />
           ))}
         </View>
-      </Section>
+      </Card>
 
-      <Section title="Síntomas">
-        <View style={styles.chipRow}>
+      <Card index={2}>
+        <Eyebrow>Síntomas físicos</Eyebrow>
+        <View style={styles.chipWrap}>
           {SYMPTOM_OPTIONS.map((s) => (
             <Chip
               key={s}
@@ -98,44 +116,62 @@ export default function LogScreen() {
             />
           ))}
         </View>
-      </Section>
+      </Card>
 
-      <Section title="Ánimo">
-        <View style={styles.chipRow}>
-          {MOOD_OPTIONS.map((m) => (
-            <Chip
-              key={m}
-              label={m}
-              selected={mood.includes(m)}
-              onPress={() => setMood(toggle(mood, m))}
-            />
-          ))}
+      <Card index={3}>
+        <Eyebrow>Hoy me siento</Eyebrow>
+        <View style={styles.moodGrid}>
+          {MOOD_OPTIONS.map((m) => {
+            const selected = mood.includes(m.label);
+            return (
+              <Pressable
+                key={m.label}
+                onPress={() => setMood(toggle(mood, m.label))}
+                style={({ pressed }) => [
+                  styles.moodCard,
+                  { backgroundColor: m.tint },
+                  selected && styles.moodCardSelected,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Text
+                  style={[
+                    type.label,
+                    { color: colors.ink },
+                    selected && { fontFamily: "Karla_700Bold" },
+                  ]}
+                >
+                  {m.label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
-      </Section>
+      </Card>
 
-      <Section title="Notas">
+      <Card index={4}>
+        <Eyebrow>Notas</Eyebrow>
+        <Text style={[type.bodySmall, { color: colors.inkFaint, marginTop: space.xs }]}>
+          Queda en tu dispositivo. Nadie más lo lee.
+        </Text>
         <TextInput
-          style={styles.notesInput}
-          placeholder="Algo más que quieras anotar..."
+          style={[styles.notesInput, type.body]}
+          placeholder="Escribilo con libertad..."
+          placeholderTextColor={colors.inkFaint}
           multiline
           value={notes}
           onChangeText={setNotes}
         />
-      </Section>
+      </Card>
 
-      <Pressable style={styles.saveButton} onPress={save} disabled={saving}>
-        <Text style={styles.saveButtonText}>{saving ? "Guardando..." : "Guardar"}</Text>
-      </Pressable>
+      <FadeInView index={5}>
+        <PrimaryButton
+          label={saving ? "Guardando..." : "Guardar"}
+          onPress={save}
+          disabled={saving}
+        />
+      </FadeInView>
     </ScrollView>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      {children}
-    </View>
   );
 }
 
@@ -151,42 +187,64 @@ function Chip({
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.chip, selected && styles.chipSelected]}
+      style={({ pressed }) => [
+        styles.chip,
+        selected && styles.chipSelected,
+        pressed && styles.pressed,
+      ]}
     >
-      <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text>
+      <Text
+        style={[
+          type.bodySmall,
+          { color: selected ? colors.onDark : colors.inkSoft },
+          selected && { fontFamily: "Karla_500Medium" },
+        ]}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, gap: 20 },
-  dateLabel: { fontSize: 13, color: "#888", fontWeight: "600" },
-  section: { gap: 10 },
-  sectionTitle: { fontSize: 15, fontWeight: "700", color: "#2C1A4D" },
-  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  scroll: {
+    padding: space.lg,
+    gap: space.md,
+    paddingBottom: space.xxl,
+    backgroundColor: colors.canvas,
+  },
+  pageTitle: { color: colors.ink, marginTop: space.xs, marginBottom: space.xs },
+  chipWrap: { flexDirection: "row", flexWrap: "wrap", gap: space.sm, marginTop: space.md },
   chip: {
     borderWidth: 1,
-    borderColor: "#D8CFEF",
-    borderRadius: 20,
+    borderColor: colors.line,
+    borderRadius: radius.pill,
     paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingHorizontal: space.lg,
   },
-  chipSelected: { backgroundColor: "#7B61FF", borderColor: "#7B61FF" },
-  chipText: { color: "#2C1A4D", fontSize: 13 },
-  chipTextSelected: { color: "#fff", fontWeight: "600" },
+  chipSelected: { backgroundColor: colors.clay, borderColor: colors.clay },
+  moodGrid: { flexDirection: "row", flexWrap: "wrap", gap: space.sm, marginTop: space.md },
+  moodCard: {
+    // Tres por fila con los gaps descontados; el flexBasis en porcentaje
+    // mantiene la grilla pareja en pantallas angostas.
+    flexBasis: "31%",
+    flexGrow: 1,
+    borderRadius: radius.md,
+    paddingVertical: space.lg,
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  moodCardSelected: { borderColor: colors.clay },
   notesInput: {
     borderWidth: 1,
-    borderColor: "#D8CFEF",
-    borderRadius: 12,
-    padding: 12,
-    minHeight: 80,
+    borderColor: colors.line,
+    borderRadius: radius.md,
+    padding: space.md,
+    minHeight: 96,
+    marginTop: space.md,
+    color: colors.ink,
     textAlignVertical: "top",
   },
-  saveButton: {
-    backgroundColor: "#2C1A4D",
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  saveButtonText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+  pressed: { opacity: 0.82 },
 });

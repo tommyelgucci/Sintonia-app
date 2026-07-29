@@ -1,34 +1,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
-import {
-  Alert,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { confirmDestructive, notify } from "@/lib/notify";
 import { getLatestCycleStart, getPregnancyLmp, setPregnancy, clearPregnancy } from "@/lib/db";
 import { dueDateFromLmp, lmpFromDueDate, isValidIsoDate } from "@/lib/pregnancy";
+import { formatDateEs } from "@/lib/format";
+import { colors, radius, space, type } from "@/lib/theme";
+import { Card, Eyebrow, FadeInView, PrimaryButton } from "@/lib/ui";
 
 type DateMode = "lmp" | "dueDate";
-
-// Alert.alert es un no-op en react-native-web (node_modules/react-native-web
-// no lo implementa) — un diálogo de confirmación con acción destructiva
-// nunca se dispararía en web. window.confirm es el único equivalente
-// disponible ahí; en nativo seguimos usando el Alert de siempre.
-function confirmDestructive(title: string, message: string, onConfirm: () => void) {
-  if (Platform.OS === "web") {
-    if (window.confirm(`${title}\n\n${message}`)) onConfirm();
-    return;
-  }
-  Alert.alert(title, message, [
-    { text: "Cancelar", style: "cancel" },
-    { text: "Salir", style: "destructive", onPress: onConfirm },
-  ]);
-}
 
 export default function PregnancySetupScreen() {
   const router = useRouter();
@@ -50,7 +30,7 @@ export default function PregnancySetupScreen() {
   async function useLastRegisteredPeriod() {
     const lastStart = await getLatestCycleStart();
     if (!lastStart) {
-      Alert.alert("No hay ningún período registrado todavía.");
+      notify("Sin datos", "Todavía no registraste ningún período.");
       return;
     }
     setMode("lmp");
@@ -59,13 +39,12 @@ export default function PregnancySetupScreen() {
 
   async function save() {
     if (!isValidIsoDate(dateInput)) {
-      Alert.alert("Fecha inválida", "Escribila como AAAA-MM-DD, por ejemplo 2026-03-15.");
+      notify("Fecha inválida", "Escribila como AAAA-MM-DD, por ejemplo 2026-03-15.");
       return;
     }
     setSaving(true);
     try {
-      const lmpDate = mode === "lmp" ? dateInput : lmpFromDueDate(dateInput);
-      await setPregnancy(lmpDate);
+      await setPregnancy(mode === "lmp" ? dateInput : lmpFromDueDate(dateInput));
       router.back();
     } finally {
       setSaving(false);
@@ -83,56 +62,81 @@ export default function PregnancySetupScreen() {
     );
   }
 
+  const valid = isValidIsoDate(dateInput);
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.body}>
-        Con cualquiera de las dos fechas alcanza — de una se calcula la otra.
-      </Text>
-
-      <View style={styles.chipRow}>
-        <Chip
-          label="Sé mi última menstruación"
-          selected={mode === "lmp"}
-          onPress={() => setMode("lmp")}
-        />
-        <Chip
-          label="Sé la fecha probable de parto"
-          selected={mode === "dueDate"}
-          onPress={() => setMode("dueDate")}
-        />
-      </View>
-
-      <TextInput
-        style={styles.dateInput}
-        placeholder="AAAA-MM-DD"
-        value={dateInput}
-        onChangeText={setDateInput}
-      />
-
-      {mode === "lmp" && (
-        <Pressable onPress={useLastRegisteredPeriod}>
-          <Text style={styles.linkText}>Usar mi último período registrado</Text>
-        </Pressable>
-      )}
-
-      {isValidIsoDate(dateInput) && (
-        <Text style={styles.previewText}>
-          {mode === "lmp"
-            ? `Fecha probable de parto: ${dueDateFromLmp(dateInput)}`
-            : `Última menstruación estimada: ${lmpFromDueDate(dateInput)}`}
+    <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <FadeInView>
+        <Eyebrow>Modo embarazo</Eyebrow>
+        <Text style={[type.title, styles.pageTitle]}>Con una fecha alcanza</Text>
+        <Text style={[type.body, { color: colors.inkSoft }]}>
+          De una se calcula la otra. Podés cambiarla cuando quieras.
         </Text>
-      )}
+      </FadeInView>
 
-      <Pressable style={styles.primaryButton} onPress={save} disabled={saving}>
-        <Text style={styles.primaryButtonText}>
-          {saving ? "Guardando..." : "Guardar"}
-        </Text>
-      </Pressable>
+      <Card index={1}>
+        <Eyebrow>Qué fecha tenés</Eyebrow>
+        <View style={styles.chipWrap}>
+          <Chip
+            label="Mi última menstruación"
+            selected={mode === "lmp"}
+            onPress={() => setMode("lmp")}
+          />
+          <Chip
+            label="La fecha probable de parto"
+            selected={mode === "dueDate"}
+            onPress={() => setMode("dueDate")}
+          />
+        </View>
+
+        <TextInput
+          style={[styles.dateInput, type.body]}
+          placeholder="AAAA-MM-DD"
+          placeholderTextColor={colors.inkFaint}
+          value={dateInput}
+          onChangeText={setDateInput}
+        />
+
+        {mode === "lmp" && (
+          <Pressable onPress={useLastRegisteredPeriod}>
+            <Text style={[type.label, { color: colors.clay, marginTop: space.md }]}>
+              Usar mi último período registrado
+            </Text>
+          </Pressable>
+        )}
+
+        {valid && (
+          <View style={styles.preview}>
+            <Eyebrow>{mode === "lmp" ? "Fecha probable de parto" : "Última menstruación"}</Eyebrow>
+            <Text style={[type.cardTitle, { color: colors.ink, marginTop: space.xs }]}>
+              {formatDateEs(
+                mode === "lmp" ? dueDateFromLmp(dateInput) : lmpFromDueDate(dateInput),
+                true
+              )}
+            </Text>
+          </View>
+        )}
+      </Card>
+
+      <FadeInView index={2}>
+        <PrimaryButton
+          label={saving ? "Guardando..." : "Guardar"}
+          onPress={save}
+          disabled={saving}
+        />
+      </FadeInView>
 
       {alreadyActive && (
-        <Pressable style={styles.exitButton} onPress={exitPregnancyMode}>
-          <Text style={styles.exitButtonText}>Salir del modo embarazo</Text>
-        </Pressable>
+        <FadeInView index={3}>
+          <Pressable
+            onPress={exitPregnancyMode}
+            style={({ pressed }) => [styles.exitButton, pressed && { opacity: 0.8 }]}
+          >
+            <Text style={[type.label, { color: colors.menstrual }]}>
+              Salir del modo embarazo
+            </Text>
+          </Pressable>
+        </FadeInView>
       )}
     </ScrollView>
   );
@@ -148,49 +152,58 @@ function Chip({
   onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} style={[styles.chip, selected && styles.chipSelected]}>
-      <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.chip,
+        selected && styles.chipSelected,
+        pressed && { opacity: 0.82 },
+      ]}
+    >
+      <Text style={[type.bodySmall, { color: selected ? colors.onDark : colors.inkSoft }]}>
+        {label}
+      </Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, gap: 16 },
-  body: { color: "#555", fontSize: 13, lineHeight: 18 },
-  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  scroll: {
+    padding: space.lg,
+    gap: space.md,
+    paddingBottom: space.xxl,
+    backgroundColor: colors.canvas,
+  },
+  pageTitle: { color: colors.ink, marginTop: space.xs, marginBottom: space.xs },
+  chipWrap: { flexDirection: "row", flexWrap: "wrap", gap: space.sm, marginTop: space.md },
   chip: {
     borderWidth: 1,
-    borderColor: "#D8CFEF",
-    borderRadius: 20,
+    borderColor: colors.line,
+    borderRadius: radius.pill,
     paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingHorizontal: space.lg,
   },
-  chipSelected: { backgroundColor: "#7B61FF", borderColor: "#7B61FF" },
-  chipText: { color: "#2C1A4D", fontSize: 13 },
-  chipTextSelected: { color: "#fff", fontWeight: "600" },
+  chipSelected: { backgroundColor: colors.clay, borderColor: colors.clay },
   dateInput: {
     borderWidth: 1,
-    borderColor: "#D8CFEF",
-    borderRadius: 12,
-    padding: 12,
-    fontSize: 16,
+    borderColor: colors.line,
+    borderRadius: radius.md,
+    padding: space.md,
+    marginTop: space.lg,
+    color: colors.ink,
     letterSpacing: 1,
   },
-  linkText: { color: "#7B61FF", fontSize: 13, fontWeight: "600" },
-  previewText: { color: "#555", fontSize: 13 },
-  primaryButton: {
-    backgroundColor: "#2C1A4D",
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: "center",
+  preview: {
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.md,
+    padding: space.lg,
+    marginTop: space.lg,
   },
-  primaryButtonText: { color: "#fff", fontWeight: "700", fontSize: 15 },
   exitButton: {
-    borderRadius: 14,
-    paddingVertical: 12,
+    borderRadius: radius.md,
+    paddingVertical: space.lg,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#C2185B",
+    borderColor: colors.line,
   },
-  exitButtonText: { color: "#C2185B", fontWeight: "600", fontSize: 13 },
 });

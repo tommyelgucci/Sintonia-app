@@ -1,20 +1,37 @@
 import { useCallback, useState } from "react";
-import { Link, useFocusEffect } from "expo-router";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { useFocusEffect, useRouter } from "expo-router";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { addCycleStart } from "@/lib/db";
 import { pushCycleToCloud } from "@/lib/sync";
 import { useCyclePrediction } from "@/lib/useCyclePrediction";
 import { usePregnancy } from "@/lib/usePregnancy";
 import { getWeekContent } from "@/lib/pregnancyContent";
+import { PHASE_NOTES } from "@/lib/phaseNotes";
+import { formatDateEs, greetingForHour } from "@/lib/format";
+import { colors, radius, space, type } from "@/lib/theme";
+import {
+  ActionRow,
+  Card,
+  Eyebrow,
+  FadeInView,
+  HeroCard,
+  PrimaryButton,
+  ProgressBar,
+  QuietButton,
+} from "@/lib/ui";
+import {
+  BookIcon,
+  CalendarPlusIcon,
+  DropletIcon,
+  LinkPeopleIcon,
+  MoonIcon,
+  PulseIcon,
+  SproutIcon,
+  SunIcon,
+} from "@/lib/icons";
+import { PREGNANCY_LENGTH_DAYS, type Trimester } from "@/lib/pregnancy";
 import type { CyclePhase } from "@/lib/cycle";
-import type { Trimester } from "@/lib/pregnancy";
 
 const PHASE_LABELS: Record<CyclePhase, string> = {
   menstrual: "Menstrual",
@@ -23,11 +40,11 @@ const PHASE_LABELS: Record<CyclePhase, string> = {
   lutea: "Lútea",
 };
 
-const PHASE_COLORS: Record<CyclePhase, string> = {
-  menstrual: "#C2185B",
-  folicular: "#7B61FF",
-  ovulacion: "#00B8A9",
-  lutea: "#F2994A",
+const PHASE_ICONS: Record<CyclePhase, typeof DropletIcon> = {
+  menstrual: DropletIcon,
+  folicular: SproutIcon,
+  ovulacion: SunIcon,
+  lutea: MoonIcon,
 };
 
 const TRIMESTER_LABELS: Record<Trimester, string> = {
@@ -36,25 +53,18 @@ const TRIMESTER_LABELS: Record<Trimester, string> = {
   tercero: "Tercer trimestre",
 };
 
-const TRIMESTER_COLORS: Record<Trimester, string> = {
-  primero: "#7B61FF",
-  segundo: "#5B4B9A",
-  tercero: "#2C1A4D",
-};
-
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
 export default function HomeScreen() {
+  const router = useRouter();
   const cycle = useCyclePrediction();
   const pregnancy = usePregnancy();
   const [saving, setSaving] = useState(false);
 
-  // index.tsx es la pantalla raíz: nunca se desmonta al navegar a log/link/
-  // pregnancy-setup y volver, así que el useEffect de cada hook no se
-  // vuelve a disparar solo. Sin esto, activar el modo embarazo y volver
-  // seguía mostrando el estado de ciclo viejo.
+  // index.tsx es la pantalla raíz: nunca se desmonta al navegar a otra y
+  // volver, así que el useEffect de cada hook no se vuelve a disparar solo.
   useFocusEffect(
     useCallback(() => {
       cycle.reload();
@@ -74,194 +84,266 @@ export default function HomeScreen() {
     }
   }
 
+  const greeting = greetingForHour(new Date().getHours());
+
   if (cycle.loading || pregnancy.loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator color="#7B61FF" />
+      <View style={styles.loadingScreen}>
+        <ActivityIndicator color={colors.clay} />
       </View>
     );
   }
 
+  const sharedActions = (startIndex: number) => (
+    <>
+      <ActionRow
+        index={startIndex}
+        icon={<PulseIcon size={21} color={colors.clayDeep} />}
+        tint="#F0E2DA"
+        title="Registrar hoy"
+        subtitle="Flujo, síntomas y cómo te sentís"
+        onPress={() => router.push("/log")}
+      />
+      <ActionRow
+        index={startIndex + 1}
+        icon={<LinkPeopleIcon size={21} color="#4F6E50" />}
+        tint="#E1E9DD"
+        title="Vincular a alguien"
+        subtitle="Pareja, amiga o red de apoyo"
+        onPress={() => router.push("/link")}
+      />
+      <ActionRow
+        index={startIndex + 2}
+        icon={<BookIcon size={21} color="#6B4C71" />}
+        tint="#E8E0EA"
+        title="Reporte para el médico"
+        subtitle="Resumen en PDF de tus ciclos"
+        onPress={() => router.push("/health-report")}
+      />
+    </>
+  );
+
   if (pregnancy.progress) {
     const { week, dayOfWeek, trimester, dueDate, daysUntilDueDate } = pregnancy.progress;
     const content = getWeekContent(week);
-    const trimesterColor = TRIMESTER_COLORS[trimester];
+    const elapsed = PREGNANCY_LENGTH_DAYS - Math.max(0, daysUntilDueDate);
 
     return (
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={[styles.phaseCard, { backgroundColor: trimesterColor }]}>
-          <Text style={styles.phaseLabel}>
-            Semana {week}{dayOfWeek > 0 ? ` + ${dayOfWeek} días` : ""}
-          </Text>
-          <Text style={styles.cycleDay}>{TRIMESTER_LABELS[trimester]}</Text>
-        </View>
+      <SafeAreaView style={styles.screen} edges={["top"]}>
+        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+          <HeroCard gradient={colors.gradients.plum}>
+            <Eyebrow tone="onDark">{greeting}</Eyebrow>
+            <Text style={[type.hero, styles.heroTitle]}>Semana {week}</Text>
+            <Text style={[type.body, { color: colors.onDarkSoft }]}>
+              {TRIMESTER_LABELS[trimester]}
+              {dayOfWeek > 0 ? ` · ${week} semanas y ${dayOfWeek} días` : ""}
+            </Text>
 
-        <View style={styles.infoRow}>
-          <InfoTile
-            label="Fecha probable de parto"
-            value={dueDate}
-            sub={daysUntilDueDate >= 0 ? `en ${daysUntilDueDate} días` : "ya pasó la fecha"}
+            <View style={styles.heroSpacer} />
+            <ProgressBar
+              ratio={elapsed / PREGNANCY_LENGTH_DAYS}
+              label={`${Math.round((elapsed / PREGNANCY_LENGTH_DAYS) * 100)}% del camino`}
+            />
+          </HeroCard>
+
+          <Card index={1}>
+            <Eyebrow>Esta semana</Eyebrow>
+            <Text style={[type.section, styles.cardHeading]}>
+              Del tamaño de {content.sizeComparison}
+            </Text>
+            <Text style={[type.body, { color: colors.inkSoft }]}>{content.blurb}</Text>
+          </Card>
+
+          <FadeInView index={2}>
+            <View style={styles.statRow}>
+              <Stat label="Fecha probable" value={formatDateEs(dueDate)} />
+              <Stat
+                label="Faltan"
+                value={daysUntilDueDate >= 0 ? `${daysUntilDueDate} días` : "Ya llegó"}
+              />
+            </View>
+          </FadeInView>
+
+          <FadeInView index={3}>
+            <Eyebrow>Ahora</Eyebrow>
+          </FadeInView>
+          {sharedActions(4)}
+
+          <QuietButton
+            label="Editar fecha o salir del modo embarazo"
+            onPress={() => router.push("/pregnancy-setup")}
           />
-          <InfoTile label="Tu bebé es del tamaño de" value={content.sizeComparison} />
-        </View>
-
-        <View style={styles.weekContentCard}>
-          <Text style={styles.weekContentText}>{content.blurb}</Text>
-        </View>
-
-        <View style={styles.navRow}>
-          <Link href="/log" asChild>
-            <Pressable style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>Registrar síntomas de hoy</Text>
-            </Pressable>
-          </Link>
-          <Link href="/link" asChild>
-            <Pressable style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>Vincular pareja</Text>
-            </Pressable>
-          </Link>
-        </View>
-
-        <Link href="/pregnancy-setup" asChild>
-          <Pressable>
-            <Text style={styles.linkText}>Editar fecha o salir del modo embarazo</Text>
-          </Pressable>
-        </Link>
-        <Link href="/health-report" asChild>
-          <Pressable>
-            <Text style={styles.linkText}>Exportar reporte para el médico</Text>
-          </Pressable>
-        </Link>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
   if (!cycle.hasAnyData || !cycle.prediction) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.emptyTitle}>Empecemos</Text>
-        <Text style={styles.emptyBody}>
-          Marcá el primer día de tu último período para que Sintonía pueda
-          calcular tu fase y predecir el próximo.
-        </Text>
-        <Pressable style={styles.primaryButton} onPress={markPeriodStartToday} disabled={saving}>
-          <Text style={styles.primaryButtonText}>
-            {saving ? "Guardando..." : "Mi período empezó hoy"}
-          </Text>
-        </Pressable>
-        <Link href="/pregnancy-setup" asChild>
-          <Pressable>
-            <Text style={styles.linkText}>¿Estás embarazada?</Text>
-          </Pressable>
-        </Link>
-      </View>
+      <SafeAreaView style={styles.screen} edges={["top"]}>
+        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+          <HeroCard gradient={colors.gradients.plum}>
+            <Eyebrow tone="onDark">{greeting}</Eyebrow>
+            <Text style={[type.hero, styles.heroTitle]}>Empecemos</Text>
+            <Text style={[type.body, { color: colors.onDarkSoft }]}>
+              Con una sola fecha alcanza para arrancar. Todo lo que registres queda
+              en este dispositivo.
+            </Text>
+          </HeroCard>
+
+          <Card index={1}>
+            <Eyebrow>Primer paso</Eyebrow>
+            <Text style={[type.section, styles.cardHeading]}>
+              ¿Cuándo empezó tu último período?
+            </Text>
+            <Text style={[type.body, { color: colors.inkSoft, marginBottom: space.lg }]}>
+              Si fue hoy, tocá el botón. Si fue otro día, podés cargarlo después sin
+              perder nada.
+            </Text>
+            <PrimaryButton
+              label={saving ? "Guardando..." : "Mi período empezó hoy"}
+              onPress={markPeriodStartToday}
+              disabled={saving}
+            />
+          </Card>
+
+          <QuietButton
+            label="Estoy embarazada"
+            onPress={() => router.push("/pregnancy-setup")}
+          />
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
   const { prediction, isEstimated } = cycle;
-  const phaseColor = PHASE_COLORS[prediction.phase];
+  const note = PHASE_NOTES[prediction.phase];
+  const PhaseIcon = PHASE_ICONS[prediction.phase];
+  const cycleLength = prediction.cycleDay + prediction.daysUntilNextPeriod;
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={[styles.phaseCard, { backgroundColor: phaseColor }]}>
-        <Text style={styles.phaseLabel}>{PHASE_LABELS[prediction.phase]}</Text>
-        <Text style={styles.cycleDay}>Día {prediction.cycleDay} del ciclo</Text>
-      </View>
+    <SafeAreaView style={styles.screen} edges={["top"]}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <HeroCard gradient={colors.gradients[prediction.phase]}>
+          <Eyebrow tone="onDark">{greeting}</Eyebrow>
+          <View style={styles.heroTitleRow}>
+            <Text style={[type.hero, styles.heroTitle]}>
+              {PHASE_LABELS[prediction.phase]}
+            </Text>
+            <PhaseIcon size={30} color={colors.onDarkSoft} />
+          </View>
+          <Text style={[type.body, { color: colors.onDarkSoft }]}>
+            Día {prediction.cycleDay} del ciclo
+          </Text>
 
-      {isEstimated && (
-        <Text style={styles.estimateNote}>
-          Predicción estimada con un ciclo de 28 días — se ajusta sola a medida
-          que registrás más períodos.
-        </Text>
-      )}
+          <View style={styles.heroSpacer} />
+          <ProgressBar
+            ratio={prediction.cycleDay / Math.max(cycleLength, 1)}
+            label={`Día ${prediction.cycleDay} de ~${cycleLength}`}
+          />
+        </HeroCard>
 
-      <View style={styles.infoRow}>
-        <InfoTile
-          label="Próximo período"
-          value={prediction.nextPeriodDate}
-          sub={`en ${prediction.daysUntilNextPeriod} días`}
+        <Card index={1}>
+          <Eyebrow>Lo que está pasando</Eyebrow>
+          <Text style={[type.section, styles.cardHeading]}>{note.title}</Text>
+          <Text style={[type.body, { color: colors.inkSoft }]}>{note.body}</Text>
+          <View style={styles.chipWrap}>
+            {note.common.map((item) => (
+              <View key={item} style={styles.chip}>
+                <Text style={[type.bodySmall, { color: colors.inkSoft }]}>{item}</Text>
+              </View>
+            ))}
+          </View>
+        </Card>
+
+        <FadeInView index={2}>
+          <View style={styles.statRow}>
+            <Stat
+              label="Próximo período"
+              value={formatDateEs(prediction.nextPeriodDate)}
+              sub={`en ${prediction.daysUntilNextPeriod} días`}
+            />
+            <Stat
+              label="Ventana fértil"
+              value={formatDateEs(prediction.fertileWindowStart)}
+              sub={`al ${formatDateEs(prediction.fertileWindowEnd)}`}
+            />
+          </View>
+        </FadeInView>
+
+        {isEstimated && (
+          <FadeInView index={3}>
+            <Text style={[type.bodySmall, styles.estimateNote]}>
+              Estimado sobre un ciclo de 28 días. Se ajusta solo a medida que
+              registrás más períodos.
+            </Text>
+          </FadeInView>
+        )}
+
+        <FadeInView index={4}>
+          <Eyebrow>Ahora</Eyebrow>
+        </FadeInView>
+
+        <ActionRow
+          index={5}
+          icon={<CalendarPlusIcon size={21} color={colors.clayDeep} />}
+          tint="#F0E2DA"
+          title="Mi período empezó hoy"
+          subtitle={saving ? "Guardando..." : "Ajusta la predicción al instante"}
+          onPress={markPeriodStartToday}
         />
-        <InfoTile
-          label="Ventana fértil"
-          value={`${prediction.fertileWindowStart} — ${prediction.fertileWindowEnd}`}
+        {sharedActions(6)}
+
+        <QuietButton
+          label="Estoy embarazada"
+          onPress={() => router.push("/pregnancy-setup")}
         />
-      </View>
-
-      <Pressable style={styles.primaryButton} onPress={markPeriodStartToday} disabled={saving}>
-        <Text style={styles.primaryButtonText}>
-          {saving ? "Guardando..." : "Mi período empezó hoy"}
-        </Text>
-      </Pressable>
-
-      <View style={styles.navRow}>
-        <Link href="/log" asChild>
-          <Pressable style={styles.secondaryButton}>
-            <Text style={styles.secondaryButtonText}>Registrar síntomas de hoy</Text>
-          </Pressable>
-        </Link>
-        <Link href="/link" asChild>
-          <Pressable style={styles.secondaryButton}>
-            <Text style={styles.secondaryButtonText}>Vincular pareja</Text>
-          </Pressable>
-        </Link>
-      </View>
-
-      <Link href="/pregnancy-setup" asChild>
-        <Pressable>
-          <Text style={styles.linkText}>¿Estás embarazada?</Text>
-        </Pressable>
-      </Link>
-      <Link href="/health-report" asChild>
-        <Pressable>
-          <Text style={styles.linkText}>Exportar reporte para el médico</Text>
-        </Pressable>
-      </Link>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
-function InfoTile({ label, value, sub }: { label: string; value: string; sub?: string }) {
+function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <View style={styles.tile}>
-      <Text style={styles.tileLabel}>{label}</Text>
-      <Text style={styles.tileValue}>{value}</Text>
-      {sub && <Text style={styles.tileSub}>{sub}</Text>}
+    <View style={styles.stat}>
+      <Eyebrow>{label}</Eyebrow>
+      <Text style={[type.cardTitle, { color: colors.ink, marginTop: space.sm }]}>{value}</Text>
+      {sub && <Text style={[type.bodySmall, { color: colors.inkFaint }]}>{sub}</Text>}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, gap: 16 },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24, gap: 16 },
-  emptyTitle: { fontSize: 22, fontWeight: "700", color: "#2C1A4D" },
-  emptyBody: { textAlign: "center", color: "#555", lineHeight: 20 },
-  phaseCard: { borderRadius: 20, padding: 24, alignItems: "center" },
-  phaseLabel: { fontSize: 28, fontWeight: "700", color: "#fff" },
-  cycleDay: { fontSize: 16, color: "#fff", marginTop: 4, opacity: 0.9 },
-  estimateNote: { fontSize: 12, color: "#888", textAlign: "center" },
-  infoRow: { flexDirection: "row", gap: 12 },
-  tile: { flex: 1, backgroundColor: "#F4F1FA", borderRadius: 14, padding: 14 },
-  tileLabel: { fontSize: 12, color: "#7B61FF", fontWeight: "600" },
-  tileValue: { fontSize: 15, fontWeight: "700", color: "#2C1A4D", marginTop: 4 },
-  tileSub: { fontSize: 12, color: "#888", marginTop: 2 },
-  primaryButton: {
-    backgroundColor: "#2C1A4D",
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  primaryButtonText: { color: "#fff", fontWeight: "700", fontSize: 15 },
-  navRow: { flexDirection: "row", gap: 12 },
-  secondaryButton: {
+  screen: { flex: 1, backgroundColor: colors.canvas },
+  loadingScreen: {
     flex: 1,
-    borderRadius: 14,
-    paddingVertical: 12,
+    backgroundColor: colors.canvas,
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#D8CFEF",
+    justifyContent: "center",
   },
-  secondaryButtonText: { color: "#2C1A4D", fontWeight: "600", fontSize: 13 },
-  weekContentCard: { backgroundColor: "#F4F1FA", borderRadius: 14, padding: 16 },
-  weekContentText: { color: "#2C1A4D", fontSize: 14, lineHeight: 20 },
-  linkText: { color: "#7B61FF", fontSize: 13, fontWeight: "600", textAlign: "center" },
+  scroll: { padding: space.lg, gap: space.md, paddingBottom: space.xxl },
+  heroTitle: { color: colors.onDark, marginTop: space.sm },
+  heroTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: space.md,
+  },
+  heroSpacer: { height: space.xl },
+  cardHeading: { color: colors.ink, marginTop: space.xs, marginBottom: space.sm },
+  statRow: { flexDirection: "row", gap: space.md },
+  stat: {
+    flex: 1,
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.md,
+    padding: space.lg,
+  },
+  chipWrap: { flexDirection: "row", flexWrap: "wrap", gap: space.sm, marginTop: space.lg },
+  chip: {
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.pill,
+    paddingVertical: 6,
+    paddingHorizontal: space.md,
+  },
+  estimateNote: { color: colors.inkFaint, textAlign: "center", paddingHorizontal: space.lg },
 });

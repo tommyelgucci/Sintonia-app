@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,6 +12,10 @@ import {
 } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { supabase } from "@/lib/supabase";
+import { notify } from "@/lib/notify";
+import { colors, radius, space, type } from "@/lib/theme";
+import { Card, Eyebrow, FadeInView, PrimaryButton } from "@/lib/ui";
+import { ChevronRightIcon, ShieldIcon } from "@/lib/icons";
 
 interface Connection {
   connectionId: string;
@@ -24,18 +27,18 @@ interface Connection {
 }
 
 function randomCode(): string {
-  // 8 caracteres, suficiente entropía para un código de un solo uso que
-  // además expira a los 7 días (ver schema.sql).
+  // 8 caracteres de un alfabeto sin I/O/0/1 para que no se confundan al
+  // dictarlo. Es de un solo uso y vence a los 7 días (ver schema.sql).
   return Array.from({ length: 8 }, () =>
-    "ABCDEFGHJKMNPQRSTUVWXYZ23456789"[Math.floor(Math.random() * 32)]
+    "ABCDEFGHJKMNPQRSTUVWXYZ23456789"[Math.floor(Math.random() * 31)]
   ).join("");
 }
 
 /**
  * Garantiza que haya una sesión (anónima si hace falta) y un perfil. La
- * vinculación de pareja necesita un user_id estable en Supabase; pedir
- * login completo antes de esto sería fricción extra para algo que en el
- * MVP solo hace falta al querer compartir con alguien.
+ * vinculación necesita un user_id estable en Supabase; pedir registro
+ * completo antes de esto sería fricción para algo que en el MVP solo hace
+ * falta al querer compartir con alguien.
  */
 async function ensureSessionAndProfile(): Promise<string> {
   let {
@@ -66,9 +69,9 @@ async function ensureSessionAndProfile(): Promise<string> {
 }
 
 export default function LinkScreen() {
-  // Cuando se abre vía el link/QR (sintonia://link?code=ABCD1234), expo-router
-  // resuelve la ruta "/link" y expone "code" acá — no hace falta un listener
-  // de deep link aparte, el router ya se encarga del scheme.
+  const router = useRouter();
+  // Al abrirse vía el QR (sintonia://link?code=ABCD1234), expo-router
+  // resuelve "/link" y expone "code" acá.
   const { code: incomingCode } = useLocalSearchParams<{ code?: string }>();
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -130,19 +133,18 @@ export default function LinkScreen() {
         setUserId(uid);
         await loadConnections(uid);
       })
-      .catch((err) => Alert.alert("No se pudo iniciar sesión", err.message))
+      .catch((err) => notify("No se pudo iniciar sesión", err.message))
       .finally(() => setLoading(false));
   }, [loadConnections]);
 
   async function generateInvite() {
     if (!userId) return;
     const code = randomCode();
-    const { error } = await supabase.from("connection_invites").insert({
-      inviter_id: userId,
-      code,
-    });
+    const { error } = await supabase
+      .from("connection_invites")
+      .insert({ inviter_id: userId, code });
     if (error) {
-      Alert.alert("Error", error.message);
+      notify("Error", error.message);
       return;
     }
     setInviteCode(code);
@@ -160,19 +162,19 @@ export default function LinkScreen() {
         .maybeSingle();
 
       if (inviteError || !invite) {
-        Alert.alert("Código inválido", "Revisá el código e intentá de nuevo.");
+        notify("Código inválido", "Revisá el código e intentá de nuevo.");
         return;
       }
       if (invite.used_by) {
-        Alert.alert("Código ya usado", "Pedí un código nuevo a esa persona.");
+        notify("Código ya usado", "Pedile un código nuevo a esa persona.");
         return;
       }
       if (new Date(invite.expires_at) < new Date()) {
-        Alert.alert("Código vencido", "Pedí un código nuevo a esa persona.");
+        notify("Código vencido", "Pedile un código nuevo a esa persona.");
         return;
       }
       if (invite.inviter_id === userId) {
-        Alert.alert("Ese código es tuyo", "Compartilo con la otra persona, no lo canjees vos.");
+        notify("Ese código es tuyo", "Compartilo con la otra persona, no lo canjees vos.");
         return;
       }
 
@@ -187,7 +189,7 @@ export default function LinkScreen() {
         .select("id")
         .single();
       if (connError || !connection) {
-        Alert.alert("Error", connError?.message ?? "No se pudo crear el vínculo.");
+        notify("Error", connError?.message ?? "No se pudo crear el vínculo.");
         return;
       }
 
@@ -201,7 +203,7 @@ export default function LinkScreen() {
 
       setRedeemCode("");
       await loadConnections(userId);
-      Alert.alert("¡Listo!", "Se vincularon las cuentas.");
+      notify("Listo", "Se vincularon las cuentas.");
     } finally {
       setRedeeming(false);
     }
@@ -223,66 +225,106 @@ export default function LinkScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator color="#7B61FF" />
+      <View style={styles.loadingScreen}>
+        <ActivityIndicator color={colors.clay} />
       </View>
     );
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Invitar a alguien</Text>
-        <Text style={styles.body}>
-          Generá un código o QR y compartíselo a la persona que querés
-          vincular — pareja, amiga, quien sea. No importa cómo se identifique
-          ninguna de las dos.
+    <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <FadeInView>
+        <Eyebrow>Vincular</Eyebrow>
+        <Text style={[type.title, styles.pageTitle]}>Compartir con quien vos quieras</Text>
+        <Text style={[type.body, { color: colors.inkSoft }]}>
+          Pareja, amiga, hermana, quien sea. No importa cómo se identifique ninguna
+          de las dos.
         </Text>
+      </FadeInView>
+
+      <FadeInView index={1}>
+        <View style={styles.privacyRow}>
+          <ShieldIcon size={18} color={colors.folicular} />
+          <Text style={[type.bodySmall, { color: colors.inkSoft, flex: 1 }]}>
+            Arranca compartiendo solo las fechas del ciclo. Los síntomas y el ánimo
+            los activás vos, si querés.
+          </Text>
+        </View>
+      </FadeInView>
+
+      <Card index={2}>
+        <Eyebrow>Invitar</Eyebrow>
         {inviteCode ? (
           <View style={styles.qrBox}>
-            <QRCode value={`sintonia://link?code=${inviteCode}`} size={180} />
-            <Text style={styles.codeText}>{inviteCode}</Text>
+            <View style={styles.qrFrame}>
+              <QRCode
+                value={`sintonia://link?code=${inviteCode}`}
+                size={160}
+                color={colors.ink}
+                backgroundColor={colors.surface}
+              />
+            </View>
+            <Text style={[type.title, styles.codeText]}>{inviteCode}</Text>
+            <Text style={[type.bodySmall, { color: colors.inkFaint }]}>
+              Vence en 7 días · un solo uso
+            </Text>
           </View>
         ) : (
-          <Pressable style={styles.primaryButton} onPress={generateInvite}>
-            <Text style={styles.primaryButtonText}>Generar código</Text>
-          </Pressable>
+          <>
+            <Text style={[type.body, { color: colors.inkSoft, marginVertical: space.md }]}>
+              Generá un código y compartíselo. Se vincula cuando lo canjee.
+            </Text>
+            <PrimaryButton label="Generar código" onPress={generateInvite} />
+          </>
         )}
-      </View>
+      </Card>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Tengo un código</Text>
+      <Card index={3}>
+        <Eyebrow>Tengo un código</Eyebrow>
         <TextInput
-          style={styles.codeInput}
+          style={[styles.codeInput, type.body]}
           placeholder="ABCD1234"
+          placeholderTextColor={colors.inkFaint}
           autoCapitalize="characters"
           value={redeemCode}
           onChangeText={setRedeemCode}
         />
-        <Pressable style={styles.primaryButton} onPress={redeemInvite} disabled={redeeming}>
-          <Text style={styles.primaryButtonText}>
-            {redeeming ? "Vinculando..." : "Vincular"}
-          </Text>
-        </Pressable>
-      </View>
+        <PrimaryButton
+          label={redeeming ? "Vinculando..." : "Vincular"}
+          onPress={redeemInvite}
+          disabled={redeeming}
+        />
+      </Card>
 
       {connections.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Personas vinculadas</Text>
-          {connections.map((c) => (
-            <View key={c.connectionId} style={styles.connectionCard}>
-              <Text style={styles.connectionName}>{c.displayName}</Text>
-              <Link
-                href={{
-                  pathname: "/partner",
-                  params: { partnerId: c.partnerId, displayName: c.displayName },
-                }}
-                asChild
+        <>
+          <FadeInView index={4}>
+            <Eyebrow>Personas vinculadas</Eyebrow>
+          </FadeInView>
+
+          {connections.map((c, i) => (
+            <Card key={c.connectionId} index={5 + i}>
+              <Pressable
+                onPress={() =>
+                  router.push({
+                    pathname: "/partner",
+                    params: { partnerId: c.partnerId, displayName: c.displayName },
+                  })
+                }
+                style={({ pressed }) => [styles.partnerRow, pressed && { opacity: 0.82 }]}
               >
-                <Pressable style={styles.viewButton}>
-                  <Text style={styles.viewButtonText}>Ver su ciclo</Text>
-                </Pressable>
-              </Link>
+                <Text style={[type.cardTitle, { color: colors.ink, flex: 1 }]}>
+                  {c.displayName}
+                </Text>
+                <Text style={[type.bodySmall, { color: colors.clay }]}>Ver su ciclo</Text>
+                <ChevronRightIcon size={16} color={colors.clay} />
+              </Pressable>
+
+              <View style={styles.divider} />
+
+              <Text style={[type.bodySmall, { color: colors.inkFaint, marginBottom: space.sm }]}>
+                Qué ve esta persona de vos
+              </Text>
               <ShareRow
                 label="Fechas de ciclo"
                 value={c.shareCycleDates}
@@ -298,9 +340,9 @@ export default function LinkScreen() {
                 value={c.shareMood}
                 onChange={(v) => updateShare(c.connectionId, "share_mood", v)}
               />
-            </View>
+            </Card>
           ))}
-        </View>
+        </>
       )}
     </ScrollView>
   );
@@ -317,50 +359,63 @@ function ShareRow({
 }) {
   return (
     <View style={styles.shareRow}>
-      <Text style={styles.shareLabel}>{label}</Text>
-      <Switch value={value} onValueChange={onChange} />
+      <Text style={[type.body, { color: colors.ink }]}>{label}</Text>
+      <Switch
+        value={value}
+        onValueChange={onChange}
+        trackColor={{ false: colors.line, true: colors.folicular }}
+        thumbColor={colors.surface}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, gap: 24 },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  section: { gap: 10 },
-  sectionTitle: { fontSize: 16, fontWeight: "700", color: "#2C1A4D" },
-  body: { color: "#555", fontSize: 13, lineHeight: 18 },
-  qrBox: { alignItems: "center", gap: 10, paddingVertical: 12 },
-  codeText: { fontSize: 20, fontWeight: "700", letterSpacing: 2, color: "#2C1A4D" },
+  scroll: {
+    padding: space.lg,
+    gap: space.md,
+    paddingBottom: space.xxl,
+    backgroundColor: colors.canvas,
+  },
+  loadingScreen: {
+    flex: 1,
+    backgroundColor: colors.canvas,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pageTitle: { color: colors.ink, marginTop: space.xs, marginBottom: space.xs },
+  privacyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space.md,
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.md,
+    padding: space.md,
+  },
+  qrBox: { alignItems: "center", gap: space.sm, paddingVertical: space.lg },
+  qrFrame: {
+    padding: space.lg,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  codeText: { color: colors.ink, letterSpacing: 3, marginTop: space.sm },
   codeInput: {
     borderWidth: 1,
-    borderColor: "#D8CFEF",
-    borderRadius: 12,
-    padding: 12,
-    fontSize: 16,
-    letterSpacing: 2,
+    borderColor: colors.line,
+    borderRadius: radius.md,
+    padding: space.md,
+    letterSpacing: 3,
+    color: colors.ink,
+    marginVertical: space.md,
   },
-  primaryButton: {
-    backgroundColor: "#2C1A4D",
-    borderRadius: 14,
-    paddingVertical: 14,
+  partnerRow: { flexDirection: "row", alignItems: "center", gap: space.sm },
+  divider: { height: 1, backgroundColor: colors.line, marginVertical: space.lg },
+  shareRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
+    paddingVertical: space.xs,
   },
-  primaryButtonText: { color: "#fff", fontWeight: "700", fontSize: 15 },
-  connectionCard: {
-    backgroundColor: "#F4F1FA",
-    borderRadius: 14,
-    padding: 14,
-    gap: 8,
-  },
-  connectionName: { fontSize: 15, fontWeight: "700", color: "#2C1A4D" },
-  viewButton: {
-    borderRadius: 12,
-    paddingVertical: 8,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#7B61FF",
-  },
-  viewButtonText: { color: "#7B61FF", fontWeight: "600", fontSize: 13 },
-  shareRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  shareLabel: { fontSize: 13, color: "#555" },
 });
