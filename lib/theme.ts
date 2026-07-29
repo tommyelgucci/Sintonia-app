@@ -70,6 +70,9 @@ export const fonts = {
  */
 export const type = {
   hero: { fontFamily: fonts.displayBold, fontSize: 40, lineHeight: 44 },
+  // Para títulos de héroe que no son una sola palabra: a 40px cualquier
+  // frase de tres palabras se parte en tres líneas en un teléfono angosto.
+  heroCompact: { fontFamily: fonts.displayBold, fontSize: 31, lineHeight: 36 },
   title: { fontFamily: fonts.display, fontSize: 26, lineHeight: 32 },
   section: { fontFamily: fonts.display, fontSize: 19, lineHeight: 25 },
   cardTitle: { fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 22 },

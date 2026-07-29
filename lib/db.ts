@@ -31,6 +31,10 @@ function getDb(): Promise<SQLite.SQLiteDatabase> {
           id INTEGER PRIMARY KEY CHECK (id = 1),
           lmp_date TEXT NOT NULL
         );
+        CREATE TABLE IF NOT EXISTS preferences (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL
+        );
       `);
       return db;
     });
@@ -150,4 +154,28 @@ export async function getPregnancyLmp(): Promise<string | null> {
 export async function clearPregnancy(): Promise<void> {
   const db = await getDb();
   await db.runAsync("DELETE FROM pregnancy WHERE id = 1");
+}
+
+/**
+ * Preferencias como clave-valor en vez de una tabla por opción. El
+ * embarazo tiene tabla propia porque guarda una fecha con la que se
+ * calcula; una preferencia que solo prende o apaga algo no justifica una
+ * migración cada vez que se agrega una.
+ */
+export async function setPreference(key: string, value: string): Promise<void> {
+  const db = await getDb();
+  await db.runAsync(
+    `INSERT INTO preferences (key, value) VALUES (?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+    [key, value]
+  );
+}
+
+export async function getPreference(key: string): Promise<string | null> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ value: string }>(
+    "SELECT value FROM preferences WHERE key = ?",
+    [key]
+  );
+  return row?.value ?? null;
 }

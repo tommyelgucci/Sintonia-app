@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useRouter } from "expo-router";
+import { goBackOrHome } from "@/lib/nav";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { confirmDestructive, notify } from "@/lib/notify";
 import { getLatestCycleStart, getPregnancyLmp, setPregnancy, clearPregnancy } from "@/lib/db";
@@ -11,7 +11,6 @@ import { Card, Eyebrow, FadeInView, PrimaryButton } from "@/lib/ui";
 type DateMode = "lmp" | "dueDate";
 
 export default function PregnancySetupScreen() {
-  const router = useRouter();
   const [mode, setMode] = useState<DateMode>("lmp");
   const [dateInput, setDateInput] = useState("");
   const [alreadyActive, setAlreadyActive] = useState(false);
@@ -45,7 +44,7 @@ export default function PregnancySetupScreen() {
     setSaving(true);
     try {
       await setPregnancy(mode === "lmp" ? dateInput : lmpFromDueDate(dateInput));
-      router.back();
+      goBackOrHome();
     } finally {
       setSaving(false);
     }
@@ -57,7 +56,7 @@ export default function PregnancySetupScreen() {
       "No se borra nada de lo que ya registraste, solo dejás de ver el progreso semanal.",
       async () => {
         await clearPregnancy();
-        router.back();
+        goBackOrHome();
       }
     );
   }
