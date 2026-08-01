@@ -85,10 +85,24 @@ borrarlo también lo borra de Supabase, para que la pareja vinculada no
 siga viendo el ciclo viejo. Toda la lógica de la grilla vive en
 `lib/calendar.ts` como funciones puras, testeadas sin montar la UI.
 
+## Recordatorios
+
+Avisos locales de período próximo, de ventana fértil (buscando embarazo) y
+de registro diario. Vienen **apagados**, y el modo discreto viene prendido:
+la notificación aparece en la pantalla bloqueada, que es un lugar que la
+usuaria no controla, así que por default no dice de qué se trata.
+
+`lib/reminders.ts` decide qué avisar (puro, con tests) y
+`lib/notifications.ts` lo agenda en el sistema. **Solo funcionan en Android
+e iOS**: un navegador con la pestaña cerrada no puede disparar un aviso
+local, así que en web la pantalla lo explica en vez de simular que quedó
+agendado.
+
 ## Qué falta para producción
 
 - Pantalla de registro/login "de verdad" (hoy la vinculación usa sesión
   anónima de Supabase).
 - Conectar `lib/ai.ts` a un endpoint propio con la API de Claude.
-- Notificaciones (recordatorio de período próximo, de tomar anticonceptivo).
 - Publicación en Play Store / App Store — falta configurar EAS Build.
+
+Ver `rumbo.md` para el orden y el detalle.

@@ -231,6 +231,25 @@ export function ChevronLeftIcon({ size = 24, color = "currentColor", strokeWidth
   );
 }
 
+export function BellIcon({ size = 24, color = "currentColor", strokeWidth = 1.6 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Path
+        d="M6.6 10.2a5.4 5.4 0 0 1 10.8 0c0 3 .7 4.6 1.4 5.5H5.2c.7-.9 1.4-2.5 1.4-5.5Z"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M10.2 18.2a1.9 1.9 0 0 0 3.6 0"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
 export function ShieldIcon({ size = 24, color = "currentColor", strokeWidth = 1.6 }: IconProps) {
   return (
     <Svg {...base(size)}>

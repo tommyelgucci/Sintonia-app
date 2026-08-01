@@ -132,6 +132,27 @@ siempre que se toca una API de plataforma:
 - `router.back()` no hace nada si la pantalla es la primera del stack (pasa
   al entrar por URL directa o por el QR de vinculación) → usar
   `goBackOrHome()` de `lib/nav.ts`.
+- Los recordatorios locales no existen en web (`lib/notifications.web.ts`
+  es no-op y `REMINDERS_SUPPORTED` es false; la pantalla lo explica en vez
+  de ofrecer controles muertos).
+- El `Switch` de react-native-web ignora `thumbColor` cuando está prendido:
+  usa su propio `activeThumbColor`, que por default es verde azulado.
+
+### Recordatorios
+
+`lib/reminders.ts` decide **qué** avisar (puro, testeado) y
+`lib/notifications.ts` lo agenda en el SO. Esa capa es **el único lugar de
+la app que usa hora local**: el dominio es UTC, pero el aviso tiene que
+sonar a las 10 de la persona que lo recibe.
+
+El plan se recalcula entero y se reagenda con `rescheduleReminders()` cada
+vez que cambia algo que mueve las fechas (registrar o borrar un inicio,
+cambiar de objetivo, entrar o salir de embarazo). Si agregás otra escritura
+que corra la predicción, llamala también: un aviso viejo que sobrevive
+llega el día equivocado, que es peor que no avisar.
+
+El default es **modo discreto** prendido: la notificación aparece en la
+pantalla bloqueada, que es un lugar que la usuaria no controla.
 
 ### IA
 

@@ -7,6 +7,7 @@ import { pushCycleToCloud } from "@/lib/sync";
 import { useCyclePrediction } from "@/lib/useCyclePrediction";
 import { usePregnancy } from "@/lib/usePregnancy";
 import { useIntention } from "@/lib/useIntention";
+import { rescheduleReminders } from "@/lib/useReminders";
 import { getFertilityInfo, FERTILITY_COPY } from "@/lib/fertility";
 import { getWeekContent } from "@/lib/pregnancyContent";
 import { PHASE_NOTES } from "@/lib/phaseNotes";
@@ -23,6 +24,7 @@ import {
   QuietButton,
 } from "@/lib/ui";
 import {
+  BellIcon,
   BookIcon,
   CalendarIcon,
   CalendarPlusIcon,
@@ -103,6 +105,9 @@ export default function HomeScreen() {
       const start = todayStr();
       await addCycleStart(start);
       await pushCycleToCloud({ startDate: start, periodLength: null });
+      // La predicción se corrió: los avisos agendados apuntaban a la fecha
+      // vieja y hay que rehacerlos.
+      await rescheduleReminders();
       await cycle.reload();
     } finally {
       setSaving(false);
@@ -160,6 +165,14 @@ export default function HomeScreen() {
         title="Reporte para el médico"
         subtitle="Resumen en PDF de tus ciclos"
         onPress={() => router.push("/health-report")}
+      />
+      <ActionRow
+        index={startIndex + 5}
+        icon={<BellIcon size={21} color="#4F6E50" />}
+        tint="#E1E9DD"
+        title="Recordatorios"
+        subtitle="Avisos de período, ventana fértil o registro"
+        onPress={() => router.push("/reminders")}
       />
     </>
   );
