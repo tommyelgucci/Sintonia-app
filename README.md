@@ -26,7 +26,8 @@ npm start              # abre Expo Dev Tools; elegí Android, iOS o web
 ```
 
 ```bash
-npm test                # corre lib/cycle.test.ts (algoritmo de predicción)
+npm test                # corre los tests de lib/ (predicción, calendario,
+                         # fertilidad, embarazo, reporte de salud)
 npx tsc --noEmit         # chequeo de tipos
 ```
 
@@ -44,11 +45,14 @@ npx tsc --noEmit         # chequeo de tipos
 
 ```
 app/                  pantallas (Expo Router)
-  index.tsx           calendario / fase actual / predicción
+  index.tsx           fase actual, predicción y accesos del día
+  calendar.tsx        calendario mensual + historial de ciclos
   log.tsx             registro diario de síntomas, ánimo y flujo
+                        (acepta ?date= para completar días pasados)
   link.tsx            generar/canjear código de vinculación + QR
 lib/
   cycle.ts            algoritmo de predicción — funciones puras, con tests
+  calendar.ts         armado de la grilla mensual e historial, con tests
   db.ts               almacenamiento local (expo-sqlite)
   supabase.ts         cliente de Supabase
   sync.ts             puente entre lo local y Supabase
@@ -66,6 +70,20 @@ sin ningún campo de género en el schema. Una vez aceptada la conexión, un
 trigger crea automáticamente la fila de `share_settings` de cada parte con
 todo apagado salvo las fechas de ciclo — cada usuaria decide después, por
 conexión, si además comparte síntomas o ánimo.
+
+## Calendario e historial
+
+El calendario distingue siempre entre lo registrado y lo estimado: el
+sangrado que la usuaria marcó va relleno, y lo proyectado hacia adelante en
+tinte suave. Mostrar las dos cosas iguales haría que una estimación se lea
+como un dato, que es justo lo que no queremos en una app donde alguien
+puede tomar una decisión sobre eso.
+
+Desde cualquier día pasado se puede completar el registro hacia atrás
+(`/log?date=YYYY-MM-DD`) o corregir un inicio de período mal cargado —
+borrarlo también lo borra de Supabase, para que la pareja vinculada no
+siga viendo el ciclo viejo. Toda la lógica de la grilla vive en
+`lib/calendar.ts` como funciones puras, testeadas sin montar la UI.
 
 ## Qué falta para producción
 
