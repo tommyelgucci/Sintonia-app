@@ -43,6 +43,16 @@ export const DEFAULT_PERIOD_LENGTH = 5;
 // de partir el ciclo al medio.
 const LUTEAL_PHASE_LENGTH = 14;
 
+/**
+ * Día del ciclo (1-based) en el que se ubica la ovulación. Se cuenta hacia
+ * atrás desde el próximo período, no hacia adelante desde el actual. El
+ * piso de `periodLength + 1` evita ubicarla dentro del sangrado en ciclos
+ * muy cortos, donde la resta daría un día que ya pasó.
+ */
+export function ovulationDayForCycle(cycleLength: number, periodLength: number): number {
+  return Math.max(periodLength + 1, cycleLength - LUTEAL_PHASE_LENGTH);
+}
+
 function parseUTCDate(dateStr: string): Date {
   const [year, month, day] = dateStr.split("-").map(Number);
   return new Date(Date.UTC(year, month - 1, day));
@@ -116,10 +126,7 @@ export function predictCycle(
   // un día de ciclo negativo o de reiniciar sin datos nuevos.
   const cycleDay = rawCycleDay > 0 ? rawCycleDay : 1;
 
-  const ovulationDay = Math.max(
-    avgPeriodLength + 1,
-    avgCycleLength - LUTEAL_PHASE_LENGTH
-  );
+  const ovulationDay = ovulationDayForCycle(avgCycleLength, avgPeriodLength);
   const ovulationDate = addDays(lastPeriodStart, ovulationDay - 1);
   const fertileWindowStart = addDays(ovulationDate, -5);
   const fertileWindowEnd = addDays(ovulationDate, 1);

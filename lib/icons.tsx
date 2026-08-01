@@ -182,11 +182,46 @@ export function CalendarPlusIcon({ size = 24, color = "currentColor", strokeWidt
   );
 }
 
+export function CalendarIcon({ size = 24, color = "currentColor", strokeWidth = 1.6 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Path
+        d="M4.4 6.8h15.2v13H4.4z"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinejoin="round"
+      />
+      <Line x1="4.4" y1="10.6" x2="19.6" y2="10.6" stroke={color} strokeWidth={strokeWidth} />
+      <Line x1="8.6" y1="4.2" x2="8.6" y2="7.4" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+      <Line x1="15.4" y1="4.2" x2="15.4" y2="7.4" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+      <Circle cx="8.6" cy="14" r="1.1" fill={color} stroke="none" />
+      <Circle cx="12" cy="14" r="1.1" fill={color} stroke="none" />
+      <Circle cx="15.4" cy="14" r="1.1" fill={color} stroke="none" />
+      <Circle cx="8.6" cy="17.2" r="1.1" fill={color} stroke="none" />
+      <Circle cx="12" cy="17.2" r="1.1" fill={color} stroke="none" />
+    </Svg>
+  );
+}
+
 export function ChevronRightIcon({ size = 24, color = "currentColor", strokeWidth = 1.8 }: IconProps) {
   return (
     <Svg {...base(size)}>
       <Path
         d="M9.5 5.5 16 12l-6.5 6.5"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+export function ChevronLeftIcon({ size = 24, color = "currentColor", strokeWidth = 1.8 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Path
+        d="M14.5 5.5 8 12l6.5 6.5"
         stroke={color}
         strokeWidth={strokeWidth}
         strokeLinecap="round"
