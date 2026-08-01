@@ -38,6 +38,9 @@ lo que se ve primero.
   con modo discreto prendido por default. Solo en Android/iOS: el navegador
   no puede avisar con la pestaña cerrada.
 - Vinculación por código o QR, con permisos por conexión.
+- **Cuenta por mail** (código de 6 dígitos, sin contraseña), opcional y
+  solo necesaria para vincularse. Quien venía de una sesión anónima puede
+  reclamar su mail sin perder los vínculos que ya tenía.
 - Modo "buscando embarazo" con la ventana fértil al frente.
 - Modo embarazo: semana gestacional y contenido por semana.
 - Biblioteca de contenidos y guía de respiración.
@@ -47,15 +50,14 @@ lo que se ve primero.
 
 ## Lo próximo, en orden
 
-1. **Registro/login real.** Hoy la vinculación usa sesión anónima de
-   Supabase: si se borra la app, se pierde el vínculo. Con email + código
-   mágico alcanza; no pedir más datos de los necesarios.
-2. **Asistente con IA.** `lib/ai.ts` ya define la forma. Falta el backend
+1. **Asistente con IA.** `lib/ai.ts` ya define la forma. Falta el backend
    propio que hable con la API de Claude (la key no puede ir en el
    cliente). Preguntas sobre el ciclo con el contexto de los registros.
-3. **EAS Build y publicación** en Play Store / App Store. Los recordatorios
+2. **EAS Build y publicación** en Play Store / App Store. Los recordatorios
    son la primera función que **no se puede probar en el navegador**: hasta
    que haya un build nativo, quedan verificados solo por sus tests.
+   Pendiente también probar el ingreso por mail de punta a punta contra un
+   proyecto de Supabase real (hoy verificado hasta la validación local).
 
 ## Ideas sin comprometer
 

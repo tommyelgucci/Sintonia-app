@@ -85,6 +85,14 @@ local primero y después empujar, nunca al revés. Si agregás una operación
 de borrado local que ya se sincronizó, agregá también su contraparte en la
 nube: si no, una conexión vinculada sigue viendo el dato viejo.
 
+La cuenta es opcional y solo hace falta para vincularse: mail + código de 6
+dígitos, sin contraseña (`lib/auth.ts` habla con Supabase, `authRules.ts`
+tiene la validación y los textos, con tests). **No se crean más sesiones
+anónimas**, pero las viejas siguen andando y la app les ofrece reclamar su
+mail sobre el mismo `user_id` para no perder las conexiones ya hechas — si
+tocás ese flujo, acordate de que crear un usuario nuevo en vez de reclamar
+el existente le borra los vínculos a esa persona.
+
 `supabase/schema.sql` tiene el modelo con RLS. El filtrado de privacidad
 pasa en el server: `share_settings` decide, por conexión, qué ve la otra
 persona (fechas de ciclo sí por default; síntomas, ánimo y notas solo si se
