@@ -8,6 +8,7 @@ import {
   removeCycleStart,
 } from "@/lib/db";
 import { pushCycleToCloud, removeCycleFromCloud } from "@/lib/sync";
+import { rescheduleReminders } from "@/lib/useReminders";
 import {
   buildCycleHistory,
   buildMonth,
@@ -139,6 +140,9 @@ export default function CalendarScreen() {
         await addCycleStart(selected);
         await pushCycleToCloud({ startDate: selected, periodLength: null });
       }
+      // Corregir un inicio mueve la predicción entera, y con ella las
+      // fechas de los avisos que ya estaban agendados.
+      await rescheduleReminders();
       await reload();
     } finally {
       setSaving(false);

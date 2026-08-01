@@ -34,6 +34,9 @@ lo que se ve primero.
 - Registro diario: flujo, síntomas, ánimo y notas.
 - **Calendario mensual e historial**: ver el mes, completar días hacia
   atrás, corregir un inicio mal cargado, revisar la duración de cada ciclo.
+- **Recordatorios** de período próximo, ventana fértil y registro diario,
+  con modo discreto prendido por default. Solo en Android/iOS: el navegador
+  no puede avisar con la pestaña cerrada.
 - Vinculación por código o QR, con permisos por conexión.
 - Modo "buscando embarazo" con la ventana fértil al frente.
 - Modo embarazo: semana gestacional y contenido por semana.
@@ -44,18 +47,15 @@ lo que se ve primero.
 
 ## Lo próximo, en orden
 
-1. **Recordatorios y notificaciones** (`expo-notifications`). Aviso de
-   período próximo, de ventana fértil si busca embarazo, y recordatorio
-   diario de registro. Todo configurable y apagable — el default tiene que
-   ser discreto, no insistente. Es lo que más sostiene el hábito de
-   registrar, que es de lo que depende toda la precisión de la app.
-2. **Registro/login real.** Hoy la vinculación usa sesión anónima de
+1. **Registro/login real.** Hoy la vinculación usa sesión anónima de
    Supabase: si se borra la app, se pierde el vínculo. Con email + código
    mágico alcanza; no pedir más datos de los necesarios.
-3. **Asistente con IA.** `lib/ai.ts` ya define la forma. Falta el backend
+2. **Asistente con IA.** `lib/ai.ts` ya define la forma. Falta el backend
    propio que hable con la API de Claude (la key no puede ir en el
    cliente). Preguntas sobre el ciclo con el contexto de los registros.
-4. **EAS Build y publicación** en Play Store / App Store.
+3. **EAS Build y publicación** en Play Store / App Store. Los recordatorios
+   son la primera función que **no se puede probar en el navegador**: hasta
+   que haya un build nativo, quedan verificados solo por sus tests.
 
 ## Ideas sin comprometer
 
