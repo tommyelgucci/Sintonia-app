@@ -37,9 +37,15 @@ npx tsc --noEmit         # chequeo de tipos
 2. Corré `supabase/schema.sql` en el SQL Editor del proyecto.
 3. Copiá la URL y la `anon key` a `.env` (`EXPO_PUBLIC_SUPABASE_URL`,
    `EXPO_PUBLIC_SUPABASE_ANON_KEY`).
-4. La vinculación de pareja usa `supabase.auth.signInAnonymously()` para no
-   pedir registro completo en el MVP — hay que habilitar "Anonymous
-   sign-ins" en Authentication → Providers del proyecto.
+4. Habilitá el proveedor **Email** en Authentication → Providers.
+5. **Importante**: en Authentication → Email Templates → *Magic Link*,
+   agregá `{{ .Token }}` al cuerpo del mail. La plantilla que viene por
+   default solo trae el link, y la app pide el código de 6 dígitos: sin
+   este cambio el mail llega pero no se puede completar el ingreso.
+
+Si venís de una versión anterior que usaba sesiones anónimas, dejá
+habilitado "Anonymous sign-ins" hasta que esas cuentas hayan reclamado su
+mail (la app las detecta y ofrece hacerlo sin perder los vínculos).
 
 ## Estructura
 
@@ -85,6 +91,23 @@ borrarlo también lo borra de Supabase, para que la pareja vinculada no
 siga viendo el ciclo viejo. Toda la lógica de la grilla vive en
 `lib/calendar.ts` como funciones puras, testeadas sin montar la UI.
 
+## Cuenta
+
+La cuenta es **opcional y sirve para una sola cosa**: que el vínculo con
+otra persona sobreviva a cambiar de teléfono. Sin cuenta la app funciona
+entera — ciclo, registros, calendario, recordatorios y reporte.
+
+Es mail + código de 6 dígitos, sin contraseña. Se usa el código y no el
+link mágico porque el link tiene que volver a la app por deep link, y ahí
+es donde se rompe (mail abierto en otro dispositivo, navegador que ignora
+el scheme, cliente de correo que precarga el link y lo consume).
+
+Quien ya se había vinculado con una sesión anónima **no pierde nada**: la
+app le ofrece asociar su mail al mismo usuario (`updateUser` +
+`verifyOtp` de tipo `email_change`), así conserva el `user_id` y con él
+todas sus conexiones. Ver `lib/auth.ts` (Supabase) y `lib/authRules.ts`
+(validación y textos, con tests).
+
 ## Recordatorios
 
 Avisos locales de período próximo, de ventana fértil (buscando embarazo) y
@@ -100,8 +123,6 @@ agendado.
 
 ## Qué falta para producción
 
-- Pantalla de registro/login "de verdad" (hoy la vinculación usa sesión
-  anónima de Supabase).
 - Conectar `lib/ai.ts` a un endpoint propio con la API de Claude.
 - Publicación en Play Store / App Store — falta configurar EAS Build.
 
