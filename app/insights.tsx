@@ -79,7 +79,9 @@ export default function InsightsScreen() {
         </Card>
       )}
 
-      {(insights.topSymptoms.length > 0 || insights.topMoods.length > 0) && (
+      {(insights.topSymptoms.length > 0 ||
+        insights.topMoods.length > 0 ||
+        insights.topDischargeSigns.length > 0) && (
         <Card index={3}>
           <Eyebrow>Lo más frecuente</Eyebrow>
           {insights.topSymptoms.length > 0 && (
@@ -87,6 +89,9 @@ export default function InsightsScreen() {
           )}
           {insights.topMoods.length > 0 && (
             <FrequencyList title="Ánimo" items={insights.topMoods} />
+          )}
+          {insights.topDischargeSigns.length > 0 && (
+            <FrequencyList title="Flujo vaginal" items={insights.topDischargeSigns} />
           )}
         </Card>
       )}

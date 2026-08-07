@@ -206,6 +206,71 @@ export const ARTICLES: Article[] = [
     ],
   },
   {
+    id: "flujo-vaginal",
+    category: "cuerpo",
+    title: "Flujo vaginal: qué dicen el color, la textura y el olor",
+    summary:
+      "El flujo cambia solo con el ciclo. Qué variación es esperable y qué combinación de color, densidad y olor suele indicar una infección.",
+    readingMinutes: 5,
+    redFlags: {
+      intro:
+        "Estas señales no son para esperar a ver si pasan solas. Buscá atención médica pronto si aparece:",
+      items: [
+        "Flujo con mal olor junto con fiebre o dolor pélvico",
+        "Cualquier cambio de flujo si hay posibilidad de embarazo",
+        "Sangrado o flujo con sangre después de la menopausia",
+        "Picazón o ardor fuertes que no mejoran con lo que ya probaste",
+        "Dolor al orinar o al tener relaciones que apareció junto con el cambio de flujo",
+        "Olor muy fuerte y repentino, sobre todo si hubo un tampón puesto más tiempo del que recordás",
+      ],
+    },
+    sections: [
+      {
+        heading: "Lo esperable cambia todo el tiempo",
+        body: "El flujo (o moco cervical) no es una sola cosa: es una secreción que el cuello uterino produce distinta en cada fase, y leerla como si tuviera que ser siempre igual es lo que hace que un cambio normal se sienta alarmante. Después del período suele haber poco o nada; en los días previos a la ovulación se vuelve más cremoso; cerca de ovular, transparente y elástico, parecido a la clara de huevo — es la señal más fértil del ciclo; y en la segunda mitad se espesa y se vuelve más pegajoso otra vez. Notar más cantidad o una textura distinta no es en sí mismo una señal de alarma. Lo que importa es la desviación de tu propio patrón, no de un ideal.",
+      },
+      {
+        heading: "Qué suele indicar el color",
+        body: "Ningún color confirma un diagnóstico por sí solo — lo que orienta es la combinación con la textura y el olor — pero hay patrones bastante consistentes:",
+        bullets: [
+          "Transparente o blanco, sin olor fuerte: dentro de lo esperable en cualquier momento del ciclo.",
+          "Blanco espeso y grumoso, tipo requesón, casi siempre con picazón: suele ser una infección por hongos (candidiasis). No necesariamente tiene mal olor.",
+          "Gris o blanco muy fino y aguado, con olor a pescado que se nota más después de tener relaciones: orienta a vaginosis bacteriana, un desequilibrio de las bacterias que viven ahí normalmente — no es una infección de transmisión sexual.",
+          "Amarillo o verde, sobre todo si es espumoso o viene con olor fuerte: puede ser tricomoniasis (una ITS) u otra infección bacteriana. Amerita consulta, no autotratamiento.",
+          "Rosado sin que sea período: suele ser un poco de sangre mezclada con flujo — manchado de ovulación, algo hormonal, o irritación del cuello uterino, por ejemplo después de relaciones. Si se repite seguido, vale la pena mencionarlo en una consulta.",
+          "Marrón fuera de los días de sangrado: casi siempre es sangre vieja que tarda en salir — la cola del período, o manchado por un DIU u otro método hormonal. Si aparece sin que nada de eso lo explique, es un dato para anotar y comentar.",
+        ],
+      },
+      {
+        heading: "Qué suele indicar el olor",
+        body: "El flujo sano tiene un olor leve o directamente ninguno, y suele ser la primera señal que se nota antes que cualquier cambio de color: la nariz detecta el desequilibrio antes que el ojo.",
+        bullets: [
+          "Olor a pescado, más marcado después de sexo: el más asociado a vaginosis bacteriana.",
+          "Olor a pan o levadura: puede acompañar a una infección por hongos, aunque no siempre está presente.",
+          "Olor fuerte, persistente, y repentino: si además hubo un tampón o una copa puesta más tiempo del habitual, revisá eso primero — es una causa frecuente y se resuelve retirándolo.",
+          "Cualquier olor que sea distinto al tuyo habitual, aunque no sepas nombrarlo: es información igual de válida que un síntoma con nombre.",
+        ],
+      },
+      {
+        heading: "Qué suele indicar la textura o la densidad",
+        body: "La consistencia es la tercera pata, y sola tampoco alcanza para saber qué es:",
+        bullets: [
+          "Elástico y transparente, tipo clara de huevo: normal, típico de los días cercanos a la ovulación.",
+          "Cremoso o ligeramente espeso: normal en buena parte del ciclo.",
+          "Grumoso, en trozos, tipo requesón: el patrón más asociado a candidiasis, sobre todo si viene con picazón.",
+          "Espumoso o con burbujas: más asociado a tricomoniasis.",
+          "Mucho más líquido y abundante que lo habitual, sin otro cambio: puede ser una variante normal (ovulación, excitación, incluso los primeros indicios de un embarazo), pero si se suma a un color u olor distinto, suma como señal de infección en vez de restar.",
+        ],
+      },
+      {
+        heading: "Qué hacer con esto",
+        body: "Ninguna de estas combinaciones reemplaza un examen: varias infecciones dan cuadros parecidos entre sí, y tratar por tu cuenta con el producto equivocado (por ejemplo, un antimicótico de venta libre cuando en realidad es vaginosis bacteriana) no cura nada y puede demorar el diagnóstico correcto. Lo que sí es útil hacer vos: registrar qué notaste y cuándo. Un cambio aislado que se resuelve solo en un día no es lo mismo que algo que se repite o empeora. Esta app permite marcar estas señales en el registro diario — ese patrón en el tiempo es exactamente el dato que ayuda a quien te atienda a distinguir entre una variante normal y algo que amerita tratamiento.",
+      },
+    ],
+    footnote:
+      "Esto es información general para orientar cuándo prestar atención, no un diagnóstico. Un examen es la única forma de confirmar qué es.",
+  },
+  {
     id: "buscar-embarazo",
     category: "fertilidad",
     title: "Buscar embarazo: cuándo es más probable",

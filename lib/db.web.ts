@@ -25,7 +25,15 @@ async function writeCycles(cycles: CycleRecord[]): Promise<void> {
 
 async function readDailyLogs(): Promise<DailyLog[]> {
   const raw = await AsyncStorage.getItem(DAILY_LOGS_KEY);
-  return raw ? JSON.parse(raw) : [];
+  // dischargeSigns se agregó después: los registros guardados antes no lo
+  // tienen en el JSON, así que acá puede faltar de verdad aunque el tipo
+  // lo declare obligatorio. Sin este default, un .map/.filter sobre ese
+  // campo en insights.ts o healthReport.ts explota con "undefined is not
+  // iterable".
+  const logs: Array<Omit<DailyLog, "dischargeSigns"> & { dischargeSigns?: string[] }> = raw
+    ? JSON.parse(raw)
+    : [];
+  return logs.map((l) => ({ ...l, dischargeSigns: l.dischargeSigns ?? [] }));
 }
 
 async function writeDailyLogs(logs: DailyLog[]): Promise<void> {
