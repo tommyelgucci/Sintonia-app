@@ -50,6 +50,7 @@ export default function RootLayout() {
       <Stack.Screen name="partner" options={{ title: "Su ciclo" }} />
       <Stack.Screen name="pregnancy-setup" options={{ title: "Modo embarazo" }} />
       <Stack.Screen name="health-report" options={{ title: "Reporte de salud" }} />
+      <Stack.Screen name="insights" options={{ title: "Estadísticas" }} />
       <Stack.Screen name="library/index" options={{ title: "Aprender" }} />
       <Stack.Screen name="library/[id]" options={{ title: "Aprender" }} />
       <Stack.Screen name="breathe" options={{ title: "Respirar" }} />

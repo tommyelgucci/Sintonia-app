@@ -196,6 +196,17 @@ export function ChevronRightIcon({ size = 24, color = "currentColor", strokeWidt
   );
 }
 
+export function ChartIcon({ size = 24, color = "currentColor", strokeWidth = 1.6 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Line x1="4.4" y1="20" x2="20" y2="20" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+      <Line x1="7.4" y1="20" x2="7.4" y2="13.5" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+      <Line x1="12" y1="20" x2="12" y2="9" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+      <Line x1="16.6" y1="20" x2="16.6" y2="5.2" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
 export function ShieldIcon({ size = 24, color = "currentColor", strokeWidth = 1.6 }: IconProps) {
   return (
     <Svg {...base(size)}>
