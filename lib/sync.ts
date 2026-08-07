@@ -30,6 +30,20 @@ export async function pushCycleToCloud(cycle: CycleRecord): Promise<void> {
     );
 }
 
+/**
+ * Borra un inicio de ciclo de la nube. Corregir una fecha mal cargada
+ * localmente no alcanza: si quedó sincronizada, la pareja vinculada sigue
+ * viendo el ciclo equivocado y la corrección se siente como que no funcionó.
+ */
+export async function removeCycleFromCloud(startDate: string): Promise<void> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  await supabase.from("cycles").delete().eq("user_id", user.id).eq("start_date", startDate);
+}
+
 export async function pushDailyLogToCloud(log: DailyLog): Promise<void> {
   const {
     data: { user },

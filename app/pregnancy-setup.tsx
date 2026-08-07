@@ -3,6 +3,7 @@ import { goBackOrHome } from "@/lib/nav";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { confirmDestructive, notify } from "@/lib/notify";
 import { getLatestCycleStart, getPregnancyLmp, setPregnancy, clearPregnancy } from "@/lib/db";
+import { rescheduleReminders } from "@/lib/useReminders";
 import { dueDateFromLmp, lmpFromDueDate, isValidIsoDate } from "@/lib/pregnancy";
 import { formatDateEs } from "@/lib/format";
 import { colors, radius, space, type } from "@/lib/theme";
@@ -44,6 +45,8 @@ export default function PregnancySetupScreen() {
     setSaving(true);
     try {
       await setPregnancy(mode === "lmp" ? dateInput : lmpFromDueDate(dateInput));
+      // Entrar en modo embarazo apaga los avisos de ciclo.
+      await rescheduleReminders();
       goBackOrHome();
     } finally {
       setSaving(false);
@@ -56,6 +59,7 @@ export default function PregnancySetupScreen() {
       "No se borra nada de lo que ya registraste, solo dejás de ver el progreso semanal.",
       async () => {
         await clearPregnancy();
+        await rescheduleReminders();
         goBackOrHome();
       }
     );

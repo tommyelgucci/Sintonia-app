@@ -45,8 +45,11 @@ export default function RootLayout() {
       }}
     >
       <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="log" options={{ title: "Registro de hoy" }} />
+      <Stack.Screen name="log" options={{ title: "Registro diario" }} />
+      <Stack.Screen name="calendar" options={{ title: "Calendario" }} />
+      <Stack.Screen name="reminders" options={{ title: "Recordatorios" }} />
       <Stack.Screen name="link" options={{ title: "Vincular" }} />
+      <Stack.Screen name="account" options={{ title: "Cuenta" }} />
       <Stack.Screen name="partner" options={{ title: "Su ciclo" }} />
       <Stack.Screen name="pregnancy-setup" options={{ title: "Modo embarazo" }} />
       <Stack.Screen name="health-report" options={{ title: "Reporte de salud" }} />
