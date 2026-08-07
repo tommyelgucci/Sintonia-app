@@ -28,7 +28,7 @@ function buildContext({ prediction, recentLogs }: AskAboutCycleParams): string {
     .slice(0, 14)
     .map(
       (l) =>
-        `${l.logDate}: flujo=${l.flow}, síntomas=[${l.symptoms.join(", ")}], ánimo=[${l.mood.join(", ")}]`
+        `${l.logDate}: flujo=${l.flow}, síntomas=[${l.symptoms.join(", ")}], ánimo=[${l.mood.join(", ")}], flujo vaginal=[${l.dischargeSigns.join(", ")}]`
     )
     .join("\n");
 

@@ -33,6 +33,7 @@ export interface CycleInsights {
   cycleLengthHistory: CycleLengthPoint[];
   topSymptoms: FrequencyCount[];
   topMoods: FrequencyCount[];
+  topDischargeSigns: FrequencyCount[];
   loggedDaysCount: number;
   /** Días transcurridos desde el primer ciclo registrado hasta hoy. */
   trackedDaysCount: number;
@@ -92,6 +93,7 @@ export function buildCycleInsights(
     cycleLengthHistory: gaps.slice(-MAX_HISTORY_POINTS),
     topSymptoms: countFrequencies(allLogs.map((l) => l.symptoms)),
     topMoods: countFrequencies(allLogs.map((l) => l.mood)),
+    topDischargeSigns: countFrequencies(allLogs.map((l) => l.dischargeSigns)),
     loggedDaysCount,
     trackedDaysCount,
     loggingRate,

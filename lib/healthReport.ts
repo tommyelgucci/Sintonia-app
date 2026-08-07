@@ -33,6 +33,7 @@ export interface HealthReportData {
   cycles: CycleSummary[];
   topSymptoms: FrequencyCount[];
   topMoods: FrequencyCount[];
+  topDischargeSigns: FrequencyCount[];
 }
 
 // Variación entre el ciclo más corto y el más largo del rango a partir de la
@@ -111,5 +112,6 @@ export function buildHealthReport(
     cycles: cycleSummaries,
     topSymptoms: countFrequencies(logs.map((l) => l.symptoms)),
     topMoods: countFrequencies(logs.map((l) => l.mood)),
+    topDischargeSigns: countFrequencies(logs.map((l) => l.dischargeSigns)),
   };
 }

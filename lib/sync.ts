@@ -45,6 +45,7 @@ export async function pushDailyLogToCloud(log: DailyLog): Promise<void> {
         flow: log.flow,
         symptoms: log.symptoms,
         mood: log.mood,
+        discharge_signs: log.dischargeSigns,
         notes: log.notes,
       },
       { onConflict: "user_id,log_date" }
@@ -71,6 +72,11 @@ export async function fetchPartnerDailyLogs(partnerId: string): Promise<DailyLog
     flow: row.flow,
     symptoms: row.symptoms ?? [],
     mood: row.mood ?? [],
+    // No se pide discharge_signs acá a propósito: es información más
+    // sensible que síntomas o ánimo, y esta pantalla no la muestra. Nunca
+    // llega al cliente de la pareja vinculada, más allá de lo que después
+    // decida hacer con ella la UI.
+    dischargeSigns: [],
     notes: row.notes,
   }));
 }

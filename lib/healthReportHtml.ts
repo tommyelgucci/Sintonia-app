@@ -98,6 +98,12 @@ export function buildHealthReportHtml(report: HealthReportData, generatedOn: str
     <tbody>${frequencyRows(report.topMoods)}</tbody>
   </table>
 
+  <h2>Cambios en el flujo vaginal</h2>
+  <table>
+    <thead><tr><th>Señal</th><th>Frecuencia</th></tr></thead>
+    <tbody>${frequencyRows(report.topDischargeSigns)}</tbody>
+  </table>
+
   <p class="footer">
     Generado localmente en el dispositivo a partir de los registros cargados en Sintonía.
     No es un diagnóstico médico ni reemplaza una evaluación clínica.

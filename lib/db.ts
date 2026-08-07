@@ -25,6 +25,7 @@ function getDb(): Promise<SQLite.SQLiteDatabase> {
           flow TEXT NOT NULL DEFAULT 'none',
           symptoms TEXT NOT NULL DEFAULT '[]',
           mood TEXT NOT NULL DEFAULT '[]',
+          discharge_signs TEXT NOT NULL DEFAULT '[]',
           notes TEXT
         );
         CREATE TABLE IF NOT EXISTS pregnancy (
@@ -36,6 +37,19 @@ function getDb(): Promise<SQLite.SQLiteDatabase> {
           value TEXT NOT NULL
         );
       `);
+      // discharge_signs se agregó después del esquema inicial. Las
+      // instalaciones nuevas ya la traen del CREATE TABLE de arriba; en
+      // esas, este ALTER falla con "duplicate column" y se ignora a
+      // propósito — es la única forma de agregar una columna a una tabla
+      // SQLite que ya existe en el dispositivo de alguien que actualizó la
+      // app.
+      try {
+        await db.execAsync(
+          `ALTER TABLE daily_logs ADD COLUMN discharge_signs TEXT NOT NULL DEFAULT '[]'`
+        );
+      } catch {
+        // La columna ya existe.
+      }
       return db;
     });
   }
@@ -77,18 +91,20 @@ export async function getLatestCycleStart(): Promise<string | null> {
 export async function upsertDailyLog(log: DailyLog): Promise<void> {
   const db = await getDb();
   await db.runAsync(
-    `INSERT INTO daily_logs (log_date, flow, symptoms, mood, notes)
-     VALUES (?, ?, ?, ?, ?)
+    `INSERT INTO daily_logs (log_date, flow, symptoms, mood, discharge_signs, notes)
+     VALUES (?, ?, ?, ?, ?, ?)
      ON CONFLICT(log_date) DO UPDATE SET
        flow = excluded.flow,
        symptoms = excluded.symptoms,
        mood = excluded.mood,
+       discharge_signs = excluded.discharge_signs,
        notes = excluded.notes`,
     [
       log.logDate,
       log.flow,
       JSON.stringify(log.symptoms),
       JSON.stringify(log.mood),
+      JSON.stringify(log.dischargeSigns),
       log.notes,
     ]
   );
@@ -101,6 +117,7 @@ export async function getDailyLog(logDate: string): Promise<DailyLog | null> {
     flow: FlowIntensity;
     symptoms: string;
     mood: string;
+    discharge_signs: string;
     notes: string | null;
   }>("SELECT * FROM daily_logs WHERE log_date = ?", [logDate]);
   if (!row) return null;
@@ -109,6 +126,7 @@ export async function getDailyLog(logDate: string): Promise<DailyLog | null> {
     flow: row.flow,
     symptoms: JSON.parse(row.symptoms),
     mood: JSON.parse(row.mood),
+    dischargeSigns: JSON.parse(row.discharge_signs),
     notes: row.notes,
   };
 }
@@ -120,6 +138,7 @@ export async function listDailyLogs(): Promise<DailyLog[]> {
     flow: FlowIntensity;
     symptoms: string;
     mood: string;
+    discharge_signs: string;
     notes: string | null;
   }>("SELECT * FROM daily_logs ORDER BY log_date DESC");
   return rows.map((row) => ({
@@ -127,6 +146,7 @@ export async function listDailyLogs(): Promise<DailyLog[]> {
     flow: row.flow,
     symptoms: JSON.parse(row.symptoms),
     mood: JSON.parse(row.mood),
+    dischargeSigns: JSON.parse(row.discharge_signs),
     notes: row.notes,
   }));
 }

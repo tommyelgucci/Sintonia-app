@@ -2,8 +2,13 @@ import { buildHealthReport, IRREGULARITY_THRESHOLD_DAYS } from "./healthReport";
 import { addDays } from "./cycle";
 import type { CycleRecord, DailyLog } from "./types";
 
-function log(logDate: string, symptoms: string[] = [], mood: string[] = []): DailyLog {
-  return { logDate, flow: "medium", symptoms, mood, notes: null };
+function log(
+  logDate: string,
+  symptoms: string[] = [],
+  mood: string[] = [],
+  dischargeSigns: string[] = []
+): DailyLog {
+  return { logDate, flow: "medium", symptoms, mood, dischargeSigns, notes: null };
 }
 
 describe("buildHealthReport", () => {
@@ -89,5 +94,15 @@ describe("buildHealthReport", () => {
     const report = buildHealthReport([], logs, 6, "2026-06-01");
     expect(report.topSymptoms[0]).toEqual({ label: "Cólicos", count: 3 });
     expect(report.topMoods[0]).toEqual({ label: "Irritable", count: 2 });
+  });
+
+  it("cuenta también la frecuencia de señales de flujo vaginal", () => {
+    const logs: DailyLog[] = [
+      log("2026-05-01", [], [], ["Olor a pescado", "Color gris"]),
+      log("2026-05-02", [], [], ["Olor a pescado"]),
+      log("2026-05-03", [], [], []),
+    ];
+    const report = buildHealthReport([], logs, 6, "2026-06-01");
+    expect(report.topDischargeSigns[0]).toEqual({ label: "Olor a pescado", count: 2 });
   });
 });
