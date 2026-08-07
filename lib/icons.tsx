@@ -182,6 +182,27 @@ export function CalendarPlusIcon({ size = 24, color = "currentColor", strokeWidt
   );
 }
 
+export function CalendarIcon({ size = 24, color = "currentColor", strokeWidth = 1.6 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Path
+        d="M4.4 6.8h15.2v13H4.4z"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinejoin="round"
+      />
+      <Line x1="4.4" y1="10.6" x2="19.6" y2="10.6" stroke={color} strokeWidth={strokeWidth} />
+      <Line x1="8.6" y1="4.2" x2="8.6" y2="7.4" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+      <Line x1="15.4" y1="4.2" x2="15.4" y2="7.4" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+      <Circle cx="8.6" cy="14" r="1.1" fill={color} stroke="none" />
+      <Circle cx="12" cy="14" r="1.1" fill={color} stroke="none" />
+      <Circle cx="15.4" cy="14" r="1.1" fill={color} stroke="none" />
+      <Circle cx="8.6" cy="17.2" r="1.1" fill={color} stroke="none" />
+      <Circle cx="12" cy="17.2" r="1.1" fill={color} stroke="none" />
+    </Svg>
+  );
+}
+
 export function ChevronRightIcon({ size = 24, color = "currentColor", strokeWidth = 1.8 }: IconProps) {
   return (
     <Svg {...base(size)}>
@@ -191,6 +212,39 @@ export function ChevronRightIcon({ size = 24, color = "currentColor", strokeWidt
         strokeWidth={strokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+export function ChevronLeftIcon({ size = 24, color = "currentColor", strokeWidth = 1.8 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Path
+        d="M14.5 5.5 8 12l6.5 6.5"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+export function BellIcon({ size = 24, color = "currentColor", strokeWidth = 1.6 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Path
+        d="M6.6 10.2a5.4 5.4 0 0 1 10.8 0c0 3 .7 4.6 1.4 5.5H5.2c.7-.9 1.4-2.5 1.4-5.5Z"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M10.2 18.2a1.9 1.9 0 0 0 3.6 0"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
       />
     </Svg>
   );

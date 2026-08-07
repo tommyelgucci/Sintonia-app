@@ -12,6 +12,8 @@ import {
 } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { supabase } from "@/lib/supabase";
+import { ensureProfile } from "@/lib/auth";
+import { useAuth } from "@/lib/useAuth";
 import { notify } from "@/lib/notify";
 import { colors, radius, space, type } from "@/lib/theme";
 import { Card, Eyebrow, FadeInView, PrimaryButton } from "@/lib/ui";
@@ -34,46 +36,13 @@ function randomCode(): string {
   ).join("");
 }
 
-/**
- * Garantiza que haya una sesión (anónima si hace falta) y un perfil. La
- * vinculación necesita un user_id estable en Supabase; pedir registro
- * completo antes de esto sería fricción para algo que en el MVP solo hace
- * falta al querer compartir con alguien.
- */
-async function ensureSessionAndProfile(): Promise<string> {
-  let {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session) {
-    const { data, error } = await supabase.auth.signInAnonymously();
-    if (error) throw error;
-    session = data.session;
-  }
-  const userId = session!.user.id;
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("id", userId)
-    .maybeSingle();
-
-  if (!profile) {
-    await supabase.from("profiles").insert({
-      id: userId,
-      display_name: "Usuaria de Sintonía",
-    });
-  }
-
-  return userId;
-}
-
 export default function LinkScreen() {
   const router = useRouter();
   // Al abrirse vía el QR (sintonia://link?code=ABCD1234), expo-router
   // resuelve "/link" y expone "code" acá.
   const { code: incomingCode } = useLocalSearchParams<{ code?: string }>();
-  const [userId, setUserId] = useState<string | null>(null);
+  const { state: auth, loading: authLoading } = useAuth();
+  const userId = auth?.userId ?? null;
   const [loading, setLoading] = useState(true);
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [redeemCode, setRedeemCode] = useState("");
@@ -128,14 +97,18 @@ export default function LinkScreen() {
   }, []);
 
   useEffect(() => {
-    ensureSessionAndProfile()
-      .then(async (uid) => {
-        setUserId(uid);
-        await loadConnections(uid);
-      })
-      .catch((err) => notify("No se pudo iniciar sesión", err.message))
+    if (authLoading) return;
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+    // El perfil hace falta para que la otra persona vea un nombre; se crea
+    // acá y no al entrar a la cuenta porque recién en esta pantalla se usa.
+    ensureProfile(userId)
+      .then(() => loadConnections(userId))
+      .catch((err) => notify("No se pudieron cargar tus vínculos", err.message))
       .finally(() => setLoading(false));
-  }, [loadConnections]);
+  }, [authLoading, userId, loadConnections]);
 
   async function generateInvite() {
     if (!userId) return;
@@ -223,11 +196,37 @@ export default function LinkScreen() {
     await loadConnections(userId);
   }
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <View style={styles.loadingScreen}>
         <ActivityIndicator color={colors.clay} />
       </View>
+    );
+  }
+
+  // Vincularse es lo único de la app que necesita servidor: hacen falta dos
+  // dispositivos que se reconozcan. Todo lo demás sigue andando sin cuenta.
+  if (!userId) {
+    return (
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <FadeInView>
+          <Eyebrow>Vincular</Eyebrow>
+          <Text style={[type.title, styles.pageTitle]}>Hace falta tu mail</Text>
+          <Text style={[type.body, { color: colors.inkSoft }]}>
+            Para compartir con alguien, las dos partes necesitan una cuenta: es lo
+            que permite que el vínculo siga existiendo si cambiás de teléfono.
+          </Text>
+        </FadeInView>
+
+        <Card index={1}>
+          <Eyebrow>Solo para esto</Eyebrow>
+          <Text style={[type.body, { color: colors.inkSoft, marginVertical: space.md }]}>
+            El resto de la app —tu ciclo, tus registros, el calendario, el reporte—
+            funciona sin cuenta y sin conexión, como hasta ahora.
+          </Text>
+          <PrimaryButton label="Crear mi cuenta" onPress={() => router.push("/account")} />
+        </Card>
+      </ScrollView>
     );
   }
 
@@ -251,6 +250,24 @@ export default function LinkScreen() {
           </Text>
         </View>
       </FadeInView>
+
+      {auth?.status === "anonymous" && (
+        // Quien se vinculó con una versión anterior sigue funcionando igual,
+        // pero sus vínculos se pierden con el teléfono. Se avisa acá, que es
+        // donde están, en vez de obligarla a migrar de golpe.
+        <FadeInView index={2}>
+          <Pressable
+            onPress={() => router.push("/account")}
+            style={({ pressed }) => [styles.warnRow, pressed && { opacity: 0.9 }]}
+          >
+            <Text style={[type.bodySmall, { color: colors.ink, flex: 1 }]}>
+              Tus vínculos viven solo en este teléfono. Poné tu mail para no
+              perderlos si lo cambiás.
+            </Text>
+            <ChevronRightIcon size={16} color={colors.clay} />
+          </Pressable>
+        </FadeInView>
+      )}
 
       <Card index={2}>
         <Eyebrow>Invitar</Eyebrow>
@@ -389,6 +406,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: space.md,
     backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.md,
+    padding: space.md,
+  },
+  warnRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space.md,
+    backgroundColor: "#F5E9E3",
     borderRadius: radius.md,
     padding: space.md,
   },
