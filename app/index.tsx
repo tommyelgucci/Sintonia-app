@@ -25,6 +25,7 @@ import {
 import {
   BookIcon,
   CalendarPlusIcon,
+  ChartIcon,
   ChevronRightIcon,
   DropletIcon,
   LinkPeopleIcon,
@@ -130,6 +131,14 @@ export default function HomeScreen() {
       />
       <ActionRow
         index={startIndex + 1}
+        icon={<ChartIcon size={21} color={colors.clayDeep} />}
+        tint="#F0E2DA"
+        title="Ver estadísticas"
+        subtitle="Tendencia de tus ciclos y síntomas frecuentes"
+        onPress={() => router.push("/insights")}
+      />
+      <ActionRow
+        index={startIndex + 2}
         icon={<LinkPeopleIcon size={21} color="#4F6E50" />}
         tint="#E1E9DD"
         title="Vincular a alguien"
@@ -137,7 +146,7 @@ export default function HomeScreen() {
         onPress={() => router.push("/link")}
       />
       <ActionRow
-        index={startIndex + 2}
+        index={startIndex + 3}
         icon={<BookIcon size={21} color="#6B4C71" />}
         tint="#E8E0EA"
         title="Aprender"
@@ -145,7 +154,7 @@ export default function HomeScreen() {
         onPress={() => router.push("/library")}
       />
       <ActionRow
-        index={startIndex + 3}
+        index={startIndex + 4}
         icon={<ShieldIcon size={21} color="#9C6B2C" />}
         tint="#F5E7D2"
         title="Reporte para el médico"
