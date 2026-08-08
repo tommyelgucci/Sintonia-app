@@ -5,6 +5,8 @@ export interface DailyLog {
   flow: FlowIntensity;
   symptoms: string[];
   mood: string[];
+  /** Señales del flujo vaginal distintas a lo habitual: color, olor, textura. */
+  dischargeSigns: string[];
   notes: string | null;
 }
 

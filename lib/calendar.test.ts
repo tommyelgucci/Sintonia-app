@@ -10,7 +10,7 @@ import {
 import type { DailyLog } from "./types";
 
 function log(logDate: string, flow: DailyLog["flow"] = "none"): DailyLog {
-  return { logDate, flow, symptoms: [], mood: [], notes: null };
+  return { logDate, flow, symptoms: [], mood: [], dischargeSigns: [], notes: null };
 }
 
 function dayFor(days: CalendarDay[], date: string): CalendarDay {

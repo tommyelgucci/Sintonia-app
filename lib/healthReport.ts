@@ -33,6 +33,7 @@ export interface HealthReportData {
   cycles: CycleSummary[];
   topSymptoms: FrequencyCount[];
   topMoods: FrequencyCount[];
+  topDischargeSigns: FrequencyCount[];
 }
 
 // Variación entre el ciclo más corto y el más largo del rango a partir de la
@@ -43,7 +44,7 @@ export const IRREGULARITY_THRESHOLD_DAYS = 7;
 
 const TOP_FREQUENCY_COUNT = 5;
 
-function countFrequencies(lists: string[][]): FrequencyCount[] {
+export function countFrequencies(lists: string[][]): FrequencyCount[] {
   const counts = new Map<string, number>();
   for (const list of lists) {
     for (const item of list) {
@@ -111,5 +112,6 @@ export function buildHealthReport(
     cycles: cycleSummaries,
     topSymptoms: countFrequencies(logs.map((l) => l.symptoms)),
     topMoods: countFrequencies(logs.map((l) => l.mood)),
+    topDischargeSigns: countFrequencies(logs.map((l) => l.dischargeSigns)),
   };
 }

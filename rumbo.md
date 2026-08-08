@@ -31,7 +31,11 @@ lo que se ve primero.
 
 - Predicción de ciclo (fase, ovulación, ventana fértil, próximo período)
   que se ajusta sola a medida que hay más datos.
-- Registro diario: flujo, síntomas, ánimo y notas.
+- Registro diario: flujo, síntomas, ánimo, notas y **señales del flujo
+  vaginal** (color, textura u olor distintos a lo habitual), con el
+  artículo que explica qué suele indicar cada combinación a un toque.
+- **Estadísticas**: tendencia de duración de los últimos ciclos, síntomas,
+  ánimo y señales de flujo más frecuentes, y qué tan seguido se registra.
 - **Calendario mensual e historial**: ver el mes, completar días hacia
   atrás, corregir un inicio mal cargado, revisar la duración de cada ciclo.
 - **Recordatorios** de período próximo, ventana fértil y registro diario,
@@ -85,6 +89,11 @@ Sin fecha ni prioridad; están acá para no volver a pensarlas de cero.
   aclara cuándo está usando valores por defecto por falta de datos.
 - **Las funciones de dominio son puras y testeadas.** Ninguna regla nueva
   entra directamente en un componente.
+- **Cada dato personal nuevo decide solo su nivel de exposición**, no lo
+  hereda de la categoría más parecida. Las señales del flujo vaginal
+  sincronizan a la nube como backup de la usuaria pero **no se muestran a
+  una conexión vinculada**, aunque tenga los síntomas habilitados: el
+  color, el olor y la textura son más sensibles que un cólico.
 
 ## Lo que Sintonía no es
 
