@@ -3,6 +3,7 @@ import { goBackOrHome } from "@/lib/nav";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { clearPregnancy } from "@/lib/db";
 import { useIntention, type Intention } from "@/lib/useIntention";
+import { rescheduleReminders } from "@/lib/useReminders";
 import { confirmDestructive } from "@/lib/notify";
 import { colors, radius, space, type } from "@/lib/theme";
 import { Eyebrow, FadeInView } from "@/lib/ui";
@@ -61,6 +62,7 @@ export default function IntentionScreen() {
         async () => {
           await clearPregnancy();
           await setIntention(next);
+          await rescheduleReminders();
           await reload();
           goBackOrHome();
         }
@@ -69,6 +71,9 @@ export default function IntentionScreen() {
     }
 
     await setIntention(next);
+    // El objetivo decide qué avisos corresponden: la ventana fértil solo se
+    // avisa buscando embarazo, y en embarazo no se avisa nada del ciclo.
+    await rescheduleReminders();
     goBackOrHome();
   }
 

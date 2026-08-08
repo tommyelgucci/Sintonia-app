@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { goBackOrHome } from "@/lib/nav";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { getDailyLog, upsertDailyLog } from "@/lib/db";
 import { pushDailyLogToCloud } from "@/lib/sync";
+import { normalizeDateParam } from "@/lib/calendar";
 import { formatDateEs } from "@/lib/format";
 import { colors, radius, space, type } from "@/lib/theme";
 import { Card, Eyebrow, FadeInView, PrimaryButton } from "@/lib/ui";
@@ -73,7 +74,15 @@ function toggle(list: string[], value: string): string[] {
 
 export default function LogScreen() {
   const router = useRouter();
-  const logDate = todayStr();
+  // Se entra acá desde la home (hoy) o desde el calendario, con ?date= para
+  // completar un día hacia atrás: casi nadie registra todos los días en el
+  // día, y sin esto lo que se olvidó se perdía.
+  const params = useLocalSearchParams<{ date?: string }>();
+  const today = todayStr();
+  const logDate = normalizeDateParam(params.date, today);
+  const isToday = logDate === today;
+
+
   const [flow, setFlow] = useState<FlowIntensity>("none");
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [mood, setMood] = useState<string[]>([]);
@@ -82,14 +91,26 @@ export default function LogScreen() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    // Reset explícito: la pantalla se reusa para otra fecha sin desmontarse
+    // (volver al calendario y abrir otro día), así que sin esto los chips
+    // del día anterior quedarían marcados sobre un día vacío.
+    setFlow("none");
+    setSymptoms([]);
+    setMood([]);
+    setNotes("");
+
+    let stale = false;
     getDailyLog(logDate).then((existing) => {
-      if (!existing) return;
+      if (stale || !existing) return;
       setFlow(existing.flow);
       setSymptoms(existing.symptoms);
       setMood(existing.mood);
       setDischargeSigns(existing.dischargeSigns);
       setNotes(existing.notes ?? "");
     });
+    return () => {
+      stale = true;
+    };
   }, [logDate]);
 
   async function save() {
@@ -107,8 +128,10 @@ export default function LogScreen() {
   return (
     <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
       <FadeInView>
-        <Eyebrow>Hoy</Eyebrow>
-        <Text style={[type.title, styles.pageTitle]}>{formatDateEs(logDate)}</Text>
+        <Eyebrow>{isToday ? "Hoy" : "Registro de otro día"}</Eyebrow>
+        <Text style={[type.title, styles.pageTitle]}>
+          {formatDateEs(logDate, !isToday)}
+        </Text>
         <Text style={[type.bodySmall, { color: colors.inkSoft }]}>
           Registrá lo que quieras. No hace falta completar todo.
         </Text>
@@ -145,8 +168,9 @@ export default function LogScreen() {
       <Card index={3}>
         <Eyebrow>Flujo vaginal</Eyebrow>
         <Text style={[type.bodySmall, { color: colors.inkFaint, marginTop: space.xs }]}>
-          Marcá si notaste algo distinto a lo tuyo habitual. No hace falta completar
-          nada si no notaste nada raro.
+          {isToday
+            ? "Marcá si notaste algo distinto a lo tuyo habitual. No hace falta completar nada si no notaste nada raro."
+            : "Marcá si ese día notaste algo distinto a lo tuyo habitual. No hace falta completar nada si no notaste nada raro."}
         </Text>
         <View style={styles.chipWrap}>
           {DISCHARGE_SIGN_OPTIONS.map((s) => (
@@ -170,7 +194,7 @@ export default function LogScreen() {
       </Card>
 
       <Card index={4}>
-        <Eyebrow>Hoy me siento</Eyebrow>
+        <Eyebrow>{isToday ? "Hoy me siento" : "Ese día me sentí"}</Eyebrow>
         <View style={styles.moodGrid}>
           {MOOD_OPTIONS.map((m) => {
             const selected = mood.includes(m.label);
