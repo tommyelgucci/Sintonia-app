@@ -7,6 +7,7 @@ import { pushCycleToCloud } from "@/lib/sync";
 import { useCyclePrediction } from "@/lib/useCyclePrediction";
 import { usePregnancy } from "@/lib/usePregnancy";
 import { useIntention } from "@/lib/useIntention";
+import { rescheduleReminders } from "@/lib/useReminders";
 import { getFertilityInfo, FERTILITY_COPY } from "@/lib/fertility";
 import { getWeekContent } from "@/lib/pregnancyContent";
 import { PHASE_NOTES } from "@/lib/phaseNotes";
@@ -23,7 +24,9 @@ import {
   QuietButton,
 } from "@/lib/ui";
 import {
+  BellIcon,
   BookIcon,
+  CalendarIcon,
   CalendarPlusIcon,
   ChartIcon,
   ChevronRightIcon,
@@ -103,6 +106,9 @@ export default function HomeScreen() {
       const start = todayStr();
       await addCycleStart(start);
       await pushCycleToCloud({ startDate: start, periodLength: null });
+      // La predicción se corrió: los avisos agendados apuntaban a la fecha
+      // vieja y hay que rehacerlos.
+      await rescheduleReminders();
       await cycle.reload();
     } finally {
       setSaving(false);
@@ -131,6 +137,14 @@ export default function HomeScreen() {
       />
       <ActionRow
         index={startIndex + 1}
+        icon={<CalendarIcon size={21} color="#4A5A6E" />}
+        tint="#DFE3E9"
+        title="Calendario e historial"
+        subtitle="Ver el mes y completar días pasados"
+        onPress={() => router.push("/calendar")}
+      />
+      <ActionRow
+        index={startIndex + 2}
         icon={<ChartIcon size={21} color={colors.clayDeep} />}
         tint="#F0E2DA"
         title="Ver estadísticas"
@@ -138,7 +152,7 @@ export default function HomeScreen() {
         onPress={() => router.push("/insights")}
       />
       <ActionRow
-        index={startIndex + 2}
+        index={startIndex + 3}
         icon={<LinkPeopleIcon size={21} color="#4F6E50" />}
         tint="#E1E9DD"
         title="Vincular a alguien"
@@ -146,7 +160,7 @@ export default function HomeScreen() {
         onPress={() => router.push("/link")}
       />
       <ActionRow
-        index={startIndex + 3}
+        index={startIndex + 4}
         icon={<BookIcon size={21} color="#6B4C71" />}
         tint="#E8E0EA"
         title="Aprender"
@@ -154,12 +168,20 @@ export default function HomeScreen() {
         onPress={() => router.push("/library")}
       />
       <ActionRow
-        index={startIndex + 4}
+        index={startIndex + 5}
         icon={<ShieldIcon size={21} color="#9C6B2C" />}
         tint="#F5E7D2"
         title="Reporte para el médico"
         subtitle="Resumen en PDF de tus ciclos"
         onPress={() => router.push("/health-report")}
+      />
+      <ActionRow
+        index={startIndex + 6}
+        icon={<BellIcon size={21} color="#4F6E50" />}
+        tint="#E1E9DD"
+        title="Recordatorios"
+        subtitle="Avisos de período, ventana fértil o registro"
+        onPress={() => router.push("/reminders")}
       />
     </>
   );

@@ -2,109 +2,208 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Commands
+## Idioma
+
+El producto, la UI, los comentarios del código y los mensajes de commit
+están en español rioplatense. Escribí en ese registro — no traduzcas el
+código existente ni mezcles idiomas dentro de un archivo.
+
+## Qué es Sintonía
+
+App de seguimiento de ciclo menstrual, salud hormonal y planificación,
+hecha con Expo (React Native + TypeScript) sobre los tres targets: iOS,
+Android y web. Dos principios que atraviesan todo el código y que conviene
+respetar antes de agregar cualquier cosa:
+
+1. **Local-first.** SQLite en el dispositivo es la fuente de verdad. La app
+   tiene que funcionar entera sin cuenta y sin red. Supabase es una copia
+   opcional, nunca el origen del dato.
+2. **Sin asumir configuración de género ni juzgar.** El schema no tiene
+   ningún campo de género y `connections` es simétrica, sin roles fijos.
+   El copy no felicita ni reta a nadie por lo que registra.
+
+## Comandos
 
 ```bash
-npm install                          # install deps
-npm start                            # Expo Dev Tools; pick Android/iOS/web
-npm run web                          # expo start --web directly
-npm test                             # jest — runs all lib/*.test.ts
-npx jest lib/cycle.test.ts           # run a single test file
-npx jest -t "nombre del test"        # run tests matching a name
-npx tsc --noEmit                     # typecheck (no build step otherwise)
+npm start                # Expo Dev Tools; elegir Android, iOS o web
+npm run web              # directo a web (el target más rápido para probar)
+npm test                 # todos los tests (jest + ts-jest, sin RN)
+npx jest lib/cycle       # un solo archivo de tests
+npx jest -t "ovulación"  # un solo caso por nombre
+npx tsc --noEmit         # chequeo de tipos
 ```
 
-In network-restricted sandboxes, `expo start` hangs trying to validate
-dependency versions against Expo's API. Add `--offline` to skip that:
-`npx expo start --web --offline --port 8081`.
+No hay linter configurado. `npx expo start` reescribe `tsconfig.json` y
+borra `expo-env.d.ts` como efecto secundario: revertí esos dos archivos
+antes de commitear si aparecen en el diff.
 
-There is no lint script configured. Tests are `ts-jest` over Node,
-scoped to `lib/*.test.ts` — only the pure logic modules are tested, not
-screens or components.
+Para verificar un cambio de UI de verdad, levantá el target web y manejalo
+con Playwright (Chromium ya está en `/opt/pw-browsers/chromium`; pasale
+`executablePath`). Se puede sembrar estado escribiendo `sintonia_cycles` y
+`sintonia_daily_logs` en `localStorage` antes de recargar.
 
-## Architecture
+En un sandbox con red restringida, `expo start` se cuelga validando las
+versiones de las dependencias contra la API de Expo. Agregá `--offline`
+para saltear ese chequeo: `npx expo start --web --offline --port 8081`.
 
-**Local-first, Supabase-optional.** SQLite (`lib/db.ts`, native) is the
-source of truth; the app is fully usable with zero network and no
-account. Supabase (`lib/sync.ts`, `lib/supabase.ts`) is a one-way mirror
-for backup and partner-linking only — writes always go to local storage
-first, then `sync.ts` pushes a copy to the cloud *if* a session exists.
-Never the other direction for the device's own data.
+## Arquitectura
 
-**Two storage backends, one API.** `lib/db.ts` (expo-sqlite) and
-`lib/db.web.ts` (AsyncStorage) expose the identical function signatures;
-Metro resolves `.web.ts` automatically on the web target, so screens
-just `import from "@/lib/db"` and never know which backend answered.
-When you change the data model, touch **both** files:
-- `db.ts`: add the column to the `CREATE TABLE` (for fresh installs)
-  *and* add a `try { ALTER TABLE ... ADD COLUMN ... } catch {}` right
-  after it (for devices upgrading from an older schema — SQLite has no
-  `ADD COLUMN IF NOT EXISTS`, and `CREATE TABLE IF NOT EXISTS` won't
-  retrofit a column onto an existing table).
-- `db.web.ts`: default the new field when reading old JSON blobs from
-  AsyncStorage (e.g. `dischargeSigns: l.dischargeSigns ?? []`) — records
-  written before the field existed won't have it.
-- If the field syncs to Supabase, mirror it in `supabase/schema.sql`
-  too, using `alter table ... add column if not exists` (Postgres does
-  support that) so re-running the script against an already-deployed
-  project is safe.
+### La regla que ordena todo: lógica pura en `lib/`, pantallas tontas en `app/`
 
-**Pure logic lives apart from data access and from React.** `lib/cycle.ts`,
-`lib/fertility.ts`, `lib/pregnancy.ts`, `lib/healthReport.ts`, and
-`lib/insights.ts` are plain functions that take already-loaded data and
-return a result — no imports of `db.ts`, no React. That's what makes them
-unit-testable (`*.test.ts` siblings) without mocking storage. Screens don't
-call these directly either; a `use*` hook (`useCyclePrediction.ts`,
-`usePregnancy.ts`, `useIntention.ts`, `useInsights.ts`) reads from `db.ts`,
-calls the pure module, and exposes `{ loading, ..., reload }` — `reload` is
-called from `useFocusEffect` after any screen writes new data, since
-`app/index.tsx` is the router root and never unmounts on navigation.
+Cada regla de negocio vive en un módulo de `lib/` como función pura sobre
+strings `'YYYY-MM-DD'`, sin tocar la base ni el reloj, y con tests. Las
+pantallas solo leen datos, llaman a esas funciones y dibujan. Por eso los
+tests corren en Node sin montar React Native. Al agregar una regla nueva
+(una fase, una ventana, un umbral), va en `lib/` con su test — no adentro
+del componente.
 
-**Dates are always `'YYYY-MM-DD'` strings, parsed as UTC midnight.**
-`cycle.ts`'s `parseUTCDate`/`addDays`/`diffDays` are the only sanctioned
-way to do date math in this codebase — never compare a stored date
-string against `Date.now()` or `new Date()` directly, that's a timezone
-bug waiting to happen (see the comment at the top of `lib/cycle.ts`).
+Módulos de dominio: `cycle.ts` (predicción), `calendar.ts` (grilla mensual
+e historial), `fertility.ts` (ventana fértil cuando busca embarazo),
+`pregnancy.ts` (semana gestacional), `healthReport.ts` (resumen médico),
+`insights.ts` (tendencias y constancia de registro), más los de contenido
+editorial (`library.ts`, `phaseNotes.ts`, `pregnancyContent.ts`).
 
-**Every screen is a file under `app/` (Expo Router) AND a line in
-`app/_layout.tsx`.** Adding a route means both: the file for the
-screen, and a `<Stack.Screen name="..." options={{ title: "..." }} />`
-entry in the root layout, or it renders without a header/title.
+Los artículos de `library.ts` siguen tres reglas fijas, explicadas en el
+comentario de cabecera de ese archivo: las señales de alarma van en un
+campo `redFlags` aparte y se renderizan **antes** del cuerpo (quien más
+las necesita es quien menos va a scrollear); rangos en vez de un promedio
+único ("21 a 35 días", no "28 días"); y nunca se afirma un diagnóstico ni
+se sugiere suspender un tratamiento — solo qué suele pasar y cuándo
+amerita consulta.
 
-**Design system, not ad hoc styles.** `lib/theme.ts` (colors, type scale,
-spacing, radius, shadow) and `lib/ui.tsx` (`Card`, `HeroCard`,
-`FadeInView`, `ActionRow`, `ProgressBar`, `PrimaryButton`, `QuietButton`,
-`Eyebrow`) are shared across every screen — compose from these instead of
-one-off `StyleSheet` primitives. Icons are hand-drawn SVGs in
-`lib/icons.tsx`; the app never uses emoji in UI (glyphs render
-inconsistently across iOS/Android/web). `FadeInView`'s `index` prop
-staggers the entrance animation — bump every subsequent index when you
-insert a new block into an existing screen.
+### Fechas: siempre string, siempre UTC
 
-**Content articles (`lib/library.ts`) follow three fixed rules**, stated
-in that file's header comment: red flags render before the body (a
-separate `redFlags` field, not buried in a paragraph), ranges instead of
-single averages ("21 to 35 days", not "28 days"), and articles never
-assert a diagnosis or tell someone to stop a treatment — only describe
-what's typical and when to consult. Follow these when adding an article.
+Todo el dominio usa `'YYYY-MM-DD'` y las helpers `addDays` / `diffDays` de
+`lib/cycle.ts`, que parsean a medianoche UTC. Nunca compares contra
+`Date.now()` ni uses `toLocaleDateString` (depende del locale del
+dispositivo: el teléfono en inglés rompería la pantalla en español —
+`lib/format.ts` formatea a mano por eso). `today` se pasa como parámetro a
+las funciones puras en vez de leerse adentro, que es lo que las hace
+testeables.
 
-**Privacy model:** nothing is shared with a linked partner by default.
-`connections` is a symmetric relationship with no fixed roles (no
-gender field anywhere in the schema). Once a connection is accepted, a
-Postgres trigger creates a `share_settings` row per person with
-everything off except `share_cycle_dates`; each person separately opts
-in to sharing symptoms/mood. `lib/sync.ts`'s `fetchPartnerDailyLogs`
-enforces this at the client too — e.g. `dischargeSigns` intentionally
-isn't fetched there even though it exists on the row, because it's more
-sensitive than symptoms/mood and that screen never renders it. When you
-add a new personal-data field, decide deliberately whether it belongs in
-that fetch, don't just widen the `select`.
+### Almacenamiento: `db.ts` y `db.web.ts`
 
-## Stack
+`lib/db.ts` usa expo-sqlite; `lib/db.web.ts` es el mismo API sobre
+AsyncStorage porque expo-sqlite ~15 no tiene backend de web. Metro resuelve
+`.web.ts` automáticamente. **Toda función que agregues a uno tiene que
+existir en el otro con la misma firma**, o la app compila y falla recién en
+runtime en un solo target.
 
-Expo (React Native + TypeScript) + Expo Router · SQLite local storage ·
-Supabase (Postgres + Auth) for sync/linking, disabled gracefully if
-`EXPO_PUBLIC_SUPABASE_URL`/`EXPO_PUBLIC_SUPABASE_ANON_KEY` are unset ·
-`lib/ai.ts` is a placeholder for an AI assistant, meant to call a
-first-party backend endpoint rather than the Anthropic API directly from
-the client (see the security note in that file).
+Agregar un campo al modelo son tres lugares, y saltear cualquiera rompe en
+un target o en los dispositivos que vienen de una versión anterior:
+
+- `db.ts`: la columna en el `CREATE TABLE` (para instalaciones nuevas)
+  **y** un `try { ALTER TABLE ... ADD COLUMN ... } catch {}` justo después
+  (para quien actualiza la app). SQLite no tiene `ADD COLUMN IF NOT
+  EXISTS`, y `CREATE TABLE IF NOT EXISTS` no le agrega la columna a una
+  tabla que ya existe. En instalaciones nuevas el `ALTER` falla con
+  "duplicate column" y se ignora a propósito.
+- `db.web.ts`: default al leer el JSON viejo de AsyncStorage
+  (`dischargeSigns: l.dischargeSigns ?? []`). Los registros escritos antes
+  del campo no lo tienen, y un `.map` sobre `undefined` explota.
+- `supabase/schema.sql`: si sincroniza, `alter table ... add column if not
+  exists` (Postgres sí lo soporta) para que reejecutar el script contra un
+  proyecto ya desplegado sea seguro.
+
+### Sincronización: `lib/sync.ts`, siempre después de escribir local
+
+Las funciones `push*ToCloud` / `remove*FromCloud` no hacen nada si no hay
+sesión de Supabase, así que se pueden llamar siempre. El patrón es escribir
+local primero y después empujar, nunca al revés. Si agregás una operación
+de borrado local que ya se sincronizó, agregá también su contraparte en la
+nube: si no, una conexión vinculada sigue viendo el dato viejo.
+
+La cuenta es opcional y solo hace falta para vincularse: mail + código de 6
+dígitos, sin contraseña (`lib/auth.ts` habla con Supabase, `authRules.ts`
+tiene la validación y los textos, con tests). **No se crean más sesiones
+anónimas**, pero las viejas siguen andando y la app les ofrece reclamar su
+mail sobre el mismo `user_id` para no perder las conexiones ya hechas — si
+tocás ese flujo, acordate de que crear un usuario nuevo en vez de reclamar
+el existente le borra los vínculos a esa persona.
+
+`supabase/schema.sql` tiene el modelo con RLS. El filtrado de privacidad
+pasa sobre todo en el server: `share_settings` decide, por conexión, qué ve
+la otra persona (fechas de ciclo sí por default; síntomas, ánimo y notas
+solo si se habilitan).
+
+El cliente agrega una segunda capa para lo más sensible:
+`fetchPartnerDailyLogs` en `sync.ts` **no pide `discharge_signs`** aunque
+la fila lo tenga y el permiso general esté activado — el color, el olor y
+la textura del flujo son más sensibles que un síntoma, y esa pantalla no
+los muestra. Cada campo personal nuevo se decide solo: pensá si entra en
+ese `select` en vez de ensancharlo por inercia.
+
+### Navegación y estado
+
+Expo Router con un stack plano en `app/_layout.tsx`; toda pantalla nueva se
+registra ahí para que tenga título. `app/index.tsx` es la raíz y **no se
+desmonta** al volver de otra pantalla, así que recarga con `useFocusEffect`
+en vez de `useEffect`. Los hooks (`useCyclePrediction`, `usePregnancy`,
+`useIntention`) exponen `reload()` para llamar después de escribir.
+
+La home tiene tres modos según `useIntention` (`tracking` / `conceiving` /
+`pregnant`, guardado en `preferences`) y el embarazo activo: cada uno
+cambia la tarjeta héroe, no la pantalla entera.
+
+Los parámetros de ruta se sanean antes de usarse (`normalizeDateParam` en
+`lib/calendar.ts`): en web la URL es editable a mano.
+
+### Diseño
+
+`lib/theme.ts` es el sistema (paleta cálida desaturada, Fraunces para lo
+que se lee y Karla para lo que se opera) y `lib/ui.tsx` los primitivos
+(`HeroCard`, `Card`, `ActionRow`, `Eyebrow`, `FadeInView`…). Usá esos, no
+estilos sueltos. Nada de emoji en la UI: los iconos son SVG propios en
+`lib/icons.tsx` porque el emoji cambia de forma entre plataformas.
+
+Las pantallas encadenan `index` en los bloques para el fade-in escalonado;
+si insertás una fila en el medio, corregí los índices siguientes.
+
+Regla de contenido: **lo registrado y lo estimado nunca se ven igual**. En
+el calendario el sangrado marcado va relleno y lo proyectado en tinte
+suave. Alguien puede tomar una decisión real sobre eso.
+
+### Los tres targets rompen distinto
+
+Ya hay tres lugares donde web y nativo divergen, y conviene sospechar
+siempre que se toca una API de plataforma:
+
+- `Alert.alert` es un no-op en react-native-web → usar `lib/notify.ts`.
+- `expo-print` en web ignora el HTML y solo imprime la página actual → ver
+  `lib/healthReportExport.ts`.
+- `router.back()` no hace nada si la pantalla es la primera del stack (pasa
+  al entrar por URL directa o por el QR de vinculación) → usar
+  `goBackOrHome()` de `lib/nav.ts`.
+- Los recordatorios locales no existen en web (`lib/notifications.web.ts`
+  es no-op y `REMINDERS_SUPPORTED` es false; la pantalla lo explica en vez
+  de ofrecer controles muertos).
+- El `Switch` de react-native-web ignora `thumbColor` cuando está prendido:
+  usa su propio `activeThumbColor`, que por default es verde azulado.
+
+### Recordatorios
+
+`lib/reminders.ts` decide **qué** avisar (puro, testeado) y
+`lib/notifications.ts` lo agenda en el SO. Esa capa es **el único lugar de
+la app que usa hora local**: el dominio es UTC, pero el aviso tiene que
+sonar a las 10 de la persona que lo recibe.
+
+El plan se recalcula entero y se reagenda con `rescheduleReminders()` cada
+vez que cambia algo que mueve las fechas (registrar o borrar un inicio,
+cambiar de objetivo, entrar o salir de embarazo). Si agregás otra escritura
+que corra la predicción, llamala también: un aviso viejo que sobrevive
+llega el día equivocado, que es peor que no avisar.
+
+El default es **modo discreto** prendido: la notificación aparece en la
+pantalla bloqueada, que es un lugar que la usuaria no controla.
+
+### IA
+
+`lib/ai.ts` es un placeholder: arma el contexto y le pega a
+`EXPO_PUBLIC_AI_ENDPOINT`, un backend propio a escribir. **No** poner una
+API key de Anthropic en el cliente: el bundle de una app publicada es
+descompilable.
+
+## Rumbo
+
+`rumbo.md` tiene qué está hecho, qué falta y en qué orden conviene. Leelo
+antes de proponer trabajo nuevo, y actualizalo cuando cierres algo.
