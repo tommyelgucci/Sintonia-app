@@ -48,10 +48,17 @@ create table if not exists daily_logs (
   flow flow_intensity not null default 'none',
   symptoms text[] not null default '{}',
   mood text[] not null default '{}',
+  discharge_signs text[] not null default '{}',
   notes text,
   created_at timestamptz not null default now(),
   unique (user_id, log_date)
 );
+
+-- discharge_signs se agregó después del create table de arriba. En un
+-- proyecto ya desplegado, "create table if not exists" no la suma sola —
+-- este alter sí, y es un no-op seguro para reejecutar el script entero
+-- (create table if not exists + este alter) en un proyecto que ya la tiene.
+alter table daily_logs add column if not exists discharge_signs text[] not null default '{}';
 
 create type connection_status as enum ('pending', 'accepted', 'revoked');
 

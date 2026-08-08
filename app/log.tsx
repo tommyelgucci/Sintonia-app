@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { goBackOrHome } from "@/lib/nav";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { getDailyLog, upsertDailyLog } from "@/lib/db";
@@ -8,6 +8,7 @@ import { normalizeDateParam } from "@/lib/calendar";
 import { formatDateEs } from "@/lib/format";
 import { colors, radius, space, type } from "@/lib/theme";
 import { Card, Eyebrow, FadeInView, PrimaryButton } from "@/lib/ui";
+import { ChevronRightIcon } from "@/lib/icons";
 import type { FlowIntensity } from "@/lib/types";
 
 const FLOW_OPTIONS: { value: FlowIntensity; label: string }[] = [
@@ -26,6 +27,26 @@ const SYMPTOM_OPTIONS = [
   "Dolor de espalda",
   "Sensibilidad en pechos",
   "Náuseas",
+];
+
+/**
+ * El flujo vaginal (moco cervical) cambia solo con el ciclo, así que no
+ * se pregunta "cómo es" sino qué se nota distinto a lo habitual: eso es lo
+ * que de verdad orienta si algo amerita consulta. Agrupado color / textura
+ * / olor porque son las tres dimensiones que la literatura clínica usa
+ * para distinguir una infección de otra — ver el artículo enlazado abajo.
+ */
+const DISCHARGE_SIGN_OPTIONS = [
+  "Color amarillo",
+  "Color verde",
+  "Color gris",
+  "Rosado sin sangrado",
+  "Marrón fuera del período",
+  "Más espeso o grumoso",
+  "Muy líquido o espumoso",
+  "Olor fuerte o distinto",
+  "Olor a pescado",
+  "Picazón o ardor",
 ];
 
 /**
@@ -52,6 +73,7 @@ function toggle(list: string[], value: string): string[] {
 }
 
 export default function LogScreen() {
+  const router = useRouter();
   // Se entra acá desde la home (hoy) o desde el calendario, con ?date= para
   // completar un día hacia atrás: casi nadie registra todos los días en el
   // día, y sin esto lo que se olvidó se perdía.
@@ -60,9 +82,11 @@ export default function LogScreen() {
   const logDate = normalizeDateParam(params.date, today);
   const isToday = logDate === today;
 
+
   const [flow, setFlow] = useState<FlowIntensity>("none");
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [mood, setMood] = useState<string[]>([]);
+  const [dischargeSigns, setDischargeSigns] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -81,6 +105,7 @@ export default function LogScreen() {
       setFlow(existing.flow);
       setSymptoms(existing.symptoms);
       setMood(existing.mood);
+      setDischargeSigns(existing.dischargeSigns);
       setNotes(existing.notes ?? "");
     });
     return () => {
@@ -91,7 +116,7 @@ export default function LogScreen() {
   async function save() {
     setSaving(true);
     try {
-      const log = { logDate, flow, symptoms, mood, notes: notes || null };
+      const log = { logDate, flow, symptoms, mood, dischargeSigns, notes: notes || null };
       await upsertDailyLog(log);
       await pushDailyLogToCloud(log);
       goBackOrHome();
@@ -141,6 +166,34 @@ export default function LogScreen() {
       </Card>
 
       <Card index={3}>
+        <Eyebrow>Flujo vaginal</Eyebrow>
+        <Text style={[type.bodySmall, { color: colors.inkFaint, marginTop: space.xs }]}>
+          {isToday
+            ? "Marcá si notaste algo distinto a lo tuyo habitual. No hace falta completar nada si no notaste nada raro."
+            : "Marcá si ese día notaste algo distinto a lo tuyo habitual. No hace falta completar nada si no notaste nada raro."}
+        </Text>
+        <View style={styles.chipWrap}>
+          {DISCHARGE_SIGN_OPTIONS.map((s) => (
+            <Chip
+              key={s}
+              label={s}
+              selected={dischargeSigns.includes(s)}
+              onPress={() => setDischargeSigns(toggle(dischargeSigns, s))}
+            />
+          ))}
+        </View>
+        <Pressable
+          onPress={() => router.push("/library/flujo-vaginal")}
+          style={({ pressed }) => [styles.libraryLink, pressed && { opacity: 0.82 }]}
+        >
+          <Text style={[type.bodySmall, { color: colors.clayDeep, flex: 1 }]}>
+            Qué puede significar cada cosa
+          </Text>
+          <ChevronRightIcon size={16} color={colors.clay} />
+        </Pressable>
+      </Card>
+
+      <Card index={4}>
         <Eyebrow>{isToday ? "Hoy me siento" : "Ese día me sentí"}</Eyebrow>
         <View style={styles.moodGrid}>
           {MOOD_OPTIONS.map((m) => {
@@ -171,7 +224,7 @@ export default function LogScreen() {
         </View>
       </Card>
 
-      <Card index={4}>
+      <Card index={5}>
         <Eyebrow>Notas</Eyebrow>
         <Text style={[type.bodySmall, { color: colors.inkFaint, marginTop: space.xs }]}>
           Queda en tu dispositivo. Nadie más lo lee.
@@ -186,7 +239,7 @@ export default function LogScreen() {
         />
       </Card>
 
-      <FadeInView index={5}>
+      <FadeInView index={6}>
         <PrimaryButton
           label={saving ? "Guardando..." : "Guardar"}
           onPress={save}
@@ -245,6 +298,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.lg,
   },
   chipSelected: { backgroundColor: colors.clay, borderColor: colors.clay },
+  libraryLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space.sm,
+    marginTop: space.md,
+  },
   moodGrid: { flexDirection: "row", flexWrap: "wrap", gap: space.sm, marginTop: space.md },
   moodCard: {
     // Tres por fila con los gaps descontados; el flexBasis en porcentaje

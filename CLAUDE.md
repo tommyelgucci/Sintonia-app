@@ -42,6 +42,10 @@ con Playwright (Chromium ya está en `/opt/pw-browsers/chromium`; pasale
 `executablePath`). Se puede sembrar estado escribiendo `sintonia_cycles` y
 `sintonia_daily_logs` en `localStorage` antes de recargar.
 
+En un sandbox con red restringida, `expo start` se cuelga validando las
+versiones de las dependencias contra la API de Expo. Agregá `--offline`
+para saltear ese chequeo: `npx expo start --web --offline --port 8081`.
+
 ## Arquitectura
 
 ### La regla que ordena todo: lógica pura en `lib/`, pantallas tontas en `app/`
@@ -56,8 +60,16 @@ del componente.
 Módulos de dominio: `cycle.ts` (predicción), `calendar.ts` (grilla mensual
 e historial), `fertility.ts` (ventana fértil cuando busca embarazo),
 `pregnancy.ts` (semana gestacional), `healthReport.ts` (resumen médico),
-más los de contenido editorial (`library.ts`, `phaseNotes.ts`,
-`pregnancyContent.ts`).
+`insights.ts` (tendencias y constancia de registro), más los de contenido
+editorial (`library.ts`, `phaseNotes.ts`, `pregnancyContent.ts`).
+
+Los artículos de `library.ts` siguen tres reglas fijas, explicadas en el
+comentario de cabecera de ese archivo: las señales de alarma van en un
+campo `redFlags` aparte y se renderizan **antes** del cuerpo (quien más
+las necesita es quien menos va a scrollear); rangos en vez de un promedio
+único ("21 a 35 días", no "28 días"); y nunca se afirma un diagnóstico ni
+se sugiere suspender un tratamiento — solo qué suele pasar y cuándo
+amerita consulta.
 
 ### Fechas: siempre string, siempre UTC
 
@@ -77,6 +89,22 @@ AsyncStorage porque expo-sqlite ~15 no tiene backend de web. Metro resuelve
 existir en el otro con la misma firma**, o la app compila y falla recién en
 runtime en un solo target.
 
+Agregar un campo al modelo son tres lugares, y saltear cualquiera rompe en
+un target o en los dispositivos que vienen de una versión anterior:
+
+- `db.ts`: la columna en el `CREATE TABLE` (para instalaciones nuevas)
+  **y** un `try { ALTER TABLE ... ADD COLUMN ... } catch {}` justo después
+  (para quien actualiza la app). SQLite no tiene `ADD COLUMN IF NOT
+  EXISTS`, y `CREATE TABLE IF NOT EXISTS` no le agrega la columna a una
+  tabla que ya existe. En instalaciones nuevas el `ALTER` falla con
+  "duplicate column" y se ignora a propósito.
+- `db.web.ts`: default al leer el JSON viejo de AsyncStorage
+  (`dischargeSigns: l.dischargeSigns ?? []`). Los registros escritos antes
+  del campo no lo tienen, y un `.map` sobre `undefined` explota.
+- `supabase/schema.sql`: si sincroniza, `alter table ... add column if not
+  exists` (Postgres sí lo soporta) para que reejecutar el script contra un
+  proyecto ya desplegado sea seguro.
+
 ### Sincronización: `lib/sync.ts`, siempre después de escribir local
 
 Las funciones `push*ToCloud` / `remove*FromCloud` no hacen nada si no hay
@@ -94,10 +122,16 @@ tocás ese flujo, acordate de que crear un usuario nuevo en vez de reclamar
 el existente le borra los vínculos a esa persona.
 
 `supabase/schema.sql` tiene el modelo con RLS. El filtrado de privacidad
-pasa en el server: `share_settings` decide, por conexión, qué ve la otra
-persona (fechas de ciclo sí por default; síntomas, ánimo y notas solo si se
-habilitan). El cliente no filtra nada — consulta y recibe lo que RLS deje.
-La vinculación usa `signInAnonymously()` en el MVP.
+pasa sobre todo en el server: `share_settings` decide, por conexión, qué ve
+la otra persona (fechas de ciclo sí por default; síntomas, ánimo y notas
+solo si se habilitan).
+
+El cliente agrega una segunda capa para lo más sensible:
+`fetchPartnerDailyLogs` en `sync.ts` **no pide `discharge_signs`** aunque
+la fila lo tenga y el permiso general esté activado — el color, el olor y
+la textura del flujo son más sensibles que un síntoma, y esa pantalla no
+los muestra. Cada campo personal nuevo se decide solo: pensá si entra en
+ese `select` en vez de ensancharlo por inercia.
 
 ### Navegación y estado
 
