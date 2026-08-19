@@ -353,3 +353,81 @@ export const ARTICLES: Article[] = [
 export function getArticle(id: string): Article | undefined {
   return ARTICLES.find((a) => a.id === id);
 }
+
+const STOPWORDS = new Set([
+  "de",
+  "la",
+  "el",
+  "en",
+  "que",
+  "y",
+  "a",
+  "los",
+  "las",
+  "un",
+  "una",
+  "para",
+  "con",
+  "es",
+  "del",
+  "por",
+  "se",
+  "su",
+  "al",
+  "como",
+  "qué",
+  "cómo",
+  "cuál",
+  "cuáles",
+  "este",
+  "esta",
+  "estos",
+  "estas",
+  "eso",
+  "esa",
+  "sobre",
+  "más",
+  "pero",
+  "sus",
+  "les",
+  "mi",
+  "me",
+  "tengo",
+  "muy",
+  "hoy",
+]);
+const WORD_RE = /[a-záéíóúñü0-9]{3,}/gi;
+
+function tokenize(text: string): Set<string> {
+  const words = text.toLowerCase().match(WORD_RE) ?? [];
+  return new Set(words.filter((w) => !STOPWORDS.has(w)));
+}
+
+function articleText(article: Article): string {
+  const sectionText = article.sections
+    .map((s) => `${s.heading} ${s.body} ${(s.bullets ?? []).join(" ")}`)
+    .join(" ");
+  return `${article.title} ${article.summary} ${sectionText}`;
+}
+
+/**
+ * Busca los artículos más relevantes para una pregunta libre, por
+ * superposición de palabras (sin stopwords). Pensado para darle contexto
+ * al asistente de IA sin mandarle la biblioteca entera: así responde con
+ * la voz y las reglas de la app (rangos, señales de alarma, sin
+ * diagnóstico) en vez de generalidades.
+ */
+export function findRelevantArticles(query: string, maxResults = 2): Article[] {
+  const queryTokens = tokenize(query);
+  if (queryTokens.size === 0) return [];
+
+  const scored = ARTICLES.map((article) => {
+    const tokens = tokenize(articleText(article));
+    let overlap = 0;
+    for (const t of queryTokens) if (tokens.has(t)) overlap++;
+    return { article, overlap };
+  }).filter((s) => s.overlap > 0);
+
+  scored.sort((a, b) => b.overlap - a.overlap);
+  return scored.slice(0, maxResults).map((s) => s.article);
+}
