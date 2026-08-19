@@ -54,9 +54,16 @@ lo que se ve primero.
 
 ## Lo próximo, en orden
 
-1. **Asistente con IA.** `lib/ai.ts` ya define la forma. Falta el backend
-   propio que hable con la API de Claude (la key no puede ir en el
-   cliente). Preguntas sobre el ciclo con el contexto de los registros.
+1. **Asistente con IA.** `lib/ai.ts` ya define la forma, y ahora arma el
+   contexto con los registros recientes **y** los artículos de la
+   biblioteca que coinciden con la pregunta (`findRelevantArticles` en
+   `lib/library.ts`, por superposición de palabras clave) para que
+   responda con la voz y las reglas de la app en vez de generalidades.
+   Falta el backend propio que hable con la API de Claude (la key no
+   puede ir en el cliente): un proxy con rate limit por IP, validación de
+   forma y CORS cerrado, del estilo del que ya existe en el backend de
+   BrainBit (otro proyecto propio) pero apuntando a Anthropic en vez de
+   Groq.
 2. **EAS Build y publicación** en Play Store / App Store. Los recordatorios
    son la primera función que **no se puede probar en el navegador**: hasta
    que haya un build nativo, quedan verificados solo por sus tests.
