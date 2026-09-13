@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   previewList: { marginTop: space.md, gap: space.md },
   previewRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   flagBox: {
-    backgroundColor: "#F5E9E3",
+    backgroundColor: "#EFD9C6",
     borderRadius: radius.md,
     padding: space.md,
     marginTop: space.lg,

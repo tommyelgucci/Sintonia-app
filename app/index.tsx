@@ -129,56 +129,56 @@ export default function HomeScreen() {
     <>
       <ActionRow
         index={startIndex}
-        icon={<PulseIcon size={21} color={colors.clayDeep} />}
-        tint="#F0E2DA"
+        icon={<PulseIcon size={21} color={colors.onDark} />}
+        tint={colors.clay}
         title="Registrar hoy"
         subtitle="Flujo, síntomas y cómo te sentís"
         onPress={() => router.push("/log")}
       />
       <ActionRow
         index={startIndex + 1}
-        icon={<CalendarIcon size={21} color="#4A5A6E" />}
-        tint="#DFE3E9"
+        icon={<CalendarIcon size={21} color={colors.onDark} />}
+        tint={colors.slate}
         title="Calendario e historial"
         subtitle="Ver el mes y completar días pasados"
         onPress={() => router.push("/calendar")}
       />
       <ActionRow
         index={startIndex + 2}
-        icon={<ChartIcon size={21} color={colors.clayDeep} />}
-        tint="#F0E2DA"
+        icon={<ChartIcon size={21} color={colors.onDark} />}
+        tint={colors.clay}
         title="Ver estadísticas"
         subtitle="Tendencia de tus ciclos y síntomas frecuentes"
         onPress={() => router.push("/insights")}
       />
       <ActionRow
         index={startIndex + 3}
-        icon={<LinkPeopleIcon size={21} color="#4F6E50" />}
-        tint="#E1E9DD"
+        icon={<LinkPeopleIcon size={21} color={colors.onDark} />}
+        tint={colors.folicular}
         title="Vincular a alguien"
         subtitle="Pareja, amiga o red de apoyo"
         onPress={() => router.push("/link")}
       />
       <ActionRow
         index={startIndex + 4}
-        icon={<BookIcon size={21} color="#6B4C71" />}
-        tint="#E8E0EA"
+        icon={<BookIcon size={21} color={colors.onDark} />}
+        tint={colors.lutea}
         title="Aprender"
         subtitle="Dolor, anticonceptivos, SOMP y más"
         onPress={() => router.push("/library")}
       />
       <ActionRow
         index={startIndex + 5}
-        icon={<ShieldIcon size={21} color="#9C6B2C" />}
-        tint="#F5E7D2"
+        icon={<ShieldIcon size={21} color={colors.ink} />}
+        tint={colors.ovulacion}
         title="Reporte para el médico"
         subtitle="Resumen en PDF de tus ciclos"
         onPress={() => router.push("/health-report")}
       />
       <ActionRow
         index={startIndex + 6}
-        icon={<BellIcon size={21} color="#4F6E50" />}
-        tint="#E1E9DD"
+        icon={<BellIcon size={21} color={colors.onDark} />}
+        tint={colors.folicular}
         title="Recordatorios"
         subtitle="Avisos de período, ventana fértil o registro"
         onPress={() => router.push("/reminders")}
@@ -415,8 +415,8 @@ export default function HomeScreen() {
 
         <ActionRow
           index={7}
-          icon={<CalendarPlusIcon size={21} color={colors.clayDeep} />}
-          tint="#F0E2DA"
+          icon={<CalendarPlusIcon size={21} color={colors.onDark} />}
+          tint={colors.clay}
           title="Mi período empezó hoy"
           subtitle={saving ? "Guardando..." : "Ajusta la predicción al instante"}
           onPress={markPeriodStartToday}
@@ -479,7 +479,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: space.md,
-    backgroundColor: "#F5E9E3",
+    backgroundColor: colors.surfaceMuted,
     borderRadius: radius.md,
     padding: space.lg,
   },

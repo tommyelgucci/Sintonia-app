@@ -90,10 +90,10 @@ const styles = StyleSheet.create({
   },
   title: { color: colors.ink, marginTop: space.sm, marginBottom: space.sm },
   redFlagBox: {
-    backgroundColor: "#F7EAE4",
+    backgroundColor: "#EFD9C6",
     borderRadius: radius.lg,
     padding: space.lg,
-    borderLeftWidth: 4,
+    borderLeftWidth: 5,
     borderLeftColor: colors.clay,
   },
   redFlagIntro: { color: colors.ink, marginTop: space.sm, marginBottom: space.md },

@@ -3,11 +3,13 @@
  *
  * Dos decisiones que sostienen todo lo demás:
  *
- * 1. Paleta cálida y desaturada. El morado saturado y los degradados
+ * 1. Paleta cálida y maximalista. El morado saturado y los degradados
  *    violeta/celeste son el default de cualquier plantilla — leen a
- *    "producto genérico". Acá los tonos salen de pigmentos: arcilla,
- *    salvia, ámbar, ciruela. Desaturados y con algo de tierra, que es lo
- *    que hace que una pantalla se sienta calma en vez de estridente.
+ *    "producto genérico". Acá los tonos siguen saliendo de pigmentos:
+ *    terracota, oliva, mango, ciruela. Pero ahora van a máxima saturación
+ *    y en bloques grandes de color con borde de tinta marcado, no en
+ *    tonos apagados de fondo — la paleta anterior era demasiado segura
+ *    como para llamar la atención en una pantalla de celular.
  *
  * 2. Serif para lo que se lee, sans para lo que se opera. Fraunces
  *    (serif óptica, con carácter) para títulos y números grandes; Karla
@@ -17,42 +19,54 @@
  */
 
 export const colors = {
-  // Base cálida: hueso, no blanco puro. El blanco puro sobre pantalla
-  // cansa la vista y lee a clínico.
-  canvas: "#F6F1EA",
-  surface: "#FFFFFF",
-  surfaceMuted: "#F0E9E0",
+  // Base cálida, no blanco puro. El blanco puro sobre pantalla cansa la
+  // vista y lee a clínico. Más profunda que antes para que los bloques de
+  // color de encima salten en vez de flotar sobre casi-blanco.
+  canvas: "#F3E6D2",
+  surface: "#FBF3E7",
+  surfaceMuted: "#EADFC9",
 
-  ink: "#2B2028",
-  inkSoft: "#6E6169",
-  inkFaint: "#9C9198",
+  ink: "#241512",
+  inkSoft: "#6B5A3F",
+  inkFaint: "#7A6549",
 
-  line: "#E4D9CE",
+  line: "#DBC9A8",
+  // Borde grueso de tinta que enmarca tarjetas y bloques de color: es lo
+  // que reemplaza la sombra suave de antes como separador principal.
+  outline: "#241512",
 
-  // Acento de marca para lo interactivo. Arcilla quemada: cálido, con
-  // suficiente contraste sobre el hueso para pasar AA en texto.
-  clay: "#A6543F",
-  clayDeep: "#7E3D2D",
+  // Acento de marca para lo interactivo. Terracota profundo: el mismo
+  // pigmento que la fase menstrual, a propósito — es el color que más se
+  // repite en la app.
+  clay: "#B33B1E",
+  clayDeep: "#7A2410",
 
-  // Tonos de fase. Desaturados a propósito: la fase es información
-  // ambiental, no una alarma.
-  menstrual: "#A8484A",
-  folicular: "#5F7F5C",
-  ovulacion: "#B8823A",
-  lutea: "#7C5E80",
+  // Tonos de fase, ahora saturados de verdad: la fase es parte de la
+  // identidad visual, no un matiz de fondo casi imperceptible.
+  menstrual: "#B33B1E",
+  folicular: "#5F7A2E",
+  ovulacion: "#E08A1E",
+  lutea: "#6A2C70",
 
-  // Degradados envolventes para las tarjetas héroe (from → to).
+  // Acento neutro (ni cálido ni de fase) para lo informativo, como el
+  // calendario.
+  slate: "#33465B",
+
+  // Degradados envolventes para las tarjetas héroe (from → to). El stop
+  // claro se mantiene más oscuro que el tono sólido de la fase (arriba)
+  // porque encima va texto color hueso: un mango o una oliva a máxima luz
+  // no sostienen el contraste con `onDark`.
   gradients: {
-    menstrual: ["#8E3B42", "#5A2430"] as const,
-    folicular: ["#4F6E50", "#2C4434"] as const,
-    ovulacion: ["#9C6B2C", "#5E3B21"] as const,
-    lutea: ["#6B4C71", "#3B2A44"] as const,
-    plum: ["#4A3350", "#2A1C33"] as const,
+    menstrual: ["#A83820", "#6B1F0C"] as const,
+    folicular: ["#5C7A32", "#33421A"] as const,
+    ovulacion: ["#A66B18", "#6E4310"] as const,
+    lutea: ["#7A3580", "#4A1E4F"] as const,
+    plum: ["#8C4A2E", "#452312"] as const,
   },
 
-  onDark: "#FBF7F2",
-  onDarkSoft: "rgba(251, 247, 242, 0.72)",
-  onDarkFaint: "rgba(251, 247, 242, 0.45)",
+  onDark: "#FBF3E7",
+  onDarkSoft: "rgba(251, 243, 231, 0.75)",
+  onDarkFaint: "rgba(251, 243, 231, 0.48)",
 };
 
 export const fonts = {
@@ -93,23 +107,24 @@ export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 };
 export const radius = { sm: 12, md: 18, lg: 24, pill: 999 };
 
 /**
- * Sombras suaves y de radio amplio. Una sombra dura marca el borde de la
- * tarjeta; una difusa da la sensación de que flota, que es lo que hace
- * legible la jerarquía sobre un fondo con degradado.
+ * El borde grueso de `colors.outline` es el que separa un bloque del
+ * fondo ahora; la sombra queda como un apoyo chico, no como el recurso
+ * principal — una sombra ancha y difusa es lo que hacía flotar todo y
+ * diluía el contraste del borde.
  */
 export const shadow = {
   card: {
-    shadowColor: "#2B2028",
-    shadowOpacity: 0.08,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 3,
+    shadowColor: "#241512",
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 1,
   },
   raised: {
-    shadowColor: "#2B2028",
-    shadowOpacity: 0.14,
-    shadowRadius: 32,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 6,
+    shadowColor: "#241512",
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 2,
   },
 };

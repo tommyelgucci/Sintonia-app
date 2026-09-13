@@ -36,9 +36,9 @@ const MARKER_STYLES: Record<
   { background: string; text: string; label: string }
 > = {
   period: { background: colors.menstrual, text: colors.onDark, label: "período registrado" },
-  predictedPeriod: { background: "#F1DEDD", text: colors.menstrual, label: "período estimado" },
-  ovulation: { background: colors.ovulacion, text: colors.onDark, label: "ovulación estimada" },
-  fertile: { background: "#F5E7D2", text: "#7A5620", label: "ventana fértil estimada" },
+  predictedPeriod: { background: "#EFD9C6", text: colors.menstrual, label: "período estimado" },
+  ovulation: { background: colors.ovulacion, text: colors.ink, label: "ovulación estimada" },
+  fertile: { background: "#F6DFAE", text: "#6E4310", label: "ventana fértil estimada" },
 };
 
 const LEGEND: Exclude<DayMarker, null>[] = [

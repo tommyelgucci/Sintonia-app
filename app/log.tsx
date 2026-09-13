@@ -56,12 +56,12 @@ const DISCHARGE_SIGN_OPTIONS = [
  * "irritable", que sería exactamente el juicio que la app no quiere hacer.
  */
 const MOOD_OPTIONS: { label: string; tint: string }[] = [
-  { label: "Tranquila", tint: "#E1E9DD" },
-  { label: "Con energía", tint: "#F5E7D2" },
-  { label: "Sensible", tint: "#EFE1E8" },
-  { label: "Irritable", tint: "#F0E2DA" },
-  { label: "Ansiosa", tint: "#E8E0EA" },
-  { label: "Triste", tint: "#DFE3E9" },
+  { label: "Tranquila", tint: "#D9E0BC" },
+  { label: "Con energía", tint: "#F4DBA1" },
+  { label: "Sensible", tint: "#EED9D2" },
+  { label: "Irritable", tint: "#E7C2AF" },
+  { label: "Ansiosa", tint: "#DEC6DB" },
+  { label: "Triste", tint: "#C9D2DB" },
 ];
 
 function todayStr(): string {
