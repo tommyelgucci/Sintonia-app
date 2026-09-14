@@ -150,11 +150,24 @@ Los parámetros de ruta se sanean antes de usarse (`normalizeDateParam` en
 
 ### Diseño
 
-`lib/theme.ts` es el sistema (paleta cálida desaturada, Fraunces para lo
-que se lee y Karla para lo que se opera) y `lib/ui.tsx` los primitivos
+`lib/theme.ts` es el sistema (paleta cálida y maximalista — terracota,
+oliva, mango, ciruela a saturación alta, en bloques grandes con borde de
+tinta marcado en vez de tonos apagados de fondo; Fraunces para lo que se
+lee y Karla para lo que se opera) y `lib/ui.tsx` los primitivos
 (`HeroCard`, `Card`, `ActionRow`, `Eyebrow`, `FadeInView`…). Usá esos, no
-estilos sueltos. Nada de emoji en la UI: los iconos son SVG propios en
-`lib/icons.tsx` porque el emoji cambia de forma entre plataformas.
+estilos sueltos: si una pantalla necesita un tinte que no está en
+`colors`, agregalo ahí como token en vez de tirar un hex suelto en el
+archivo de la pantalla — es lo que mantiene la paleta como un sistema y no
+como una colección de decisiones aisladas. Nada de emoji en la UI: los
+iconos son SVG propios en `lib/icons.tsx` porque el emoji cambia de forma
+entre plataformas.
+
+Cada tarjeta y bloque de color lleva `colors.outline` (2px) como borde: es
+el separador principal ahora, la sombra (`shadow.card` / `shadow.raised`)
+quedó como apoyo chico. Un tono muy claro (mango, oliva) sobre fondo
+oscuro necesita texto/ícono en `colors.ink`, no en `colors.onDark` — antes
+de sumar un color nuevo a un bloque sólido, verificá el contraste contra
+lo que va a ir encima.
 
 Las pantallas encadenan `index` en los bloques para el fade-in escalonado;
 si insertás una fila en el medio, corregí los índices siguientes.

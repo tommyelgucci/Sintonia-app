@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     width: CIRCLE,
     height: CIRCLE,
     borderRadius: CIRCLE / 2,
-    backgroundColor: "#E4EBE0",
+    backgroundColor: "#D9E0BC",
   },
   // Segundo círculo apenas más grande y translúcido: le da un borde suave
   // al movimiento en vez de un canto duro contra el fondo.
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
     width: CIRCLE + 44,
     height: CIRCLE + 44,
     borderRadius: (CIRCLE + 44) / 2,
-    backgroundColor: "rgba(95, 127, 92, 0.10)",
+    backgroundColor: "rgba(95, 122, 46, 0.14)",
   },
   stageLabel: { alignItems: "center", gap: 2 },
   button: {

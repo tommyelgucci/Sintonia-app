@@ -6,11 +6,11 @@ import { Eyebrow, FadeInView } from "@/lib/ui";
 import { ChevronRightIcon, HeartIcon } from "@/lib/icons";
 
 const CATEGORY_TINTS: Record<ArticleCategory, string> = {
-  cuerpo: "#F0E2DA",
-  anticoncepcion: "#E8E0EA",
-  calma: "#E1E9DD",
-  condiciones: "#F5E7D2",
-  fertilidad: "#DCE7DE",
+  cuerpo: colors.clay,
+  anticoncepcion: colors.lutea,
+  calma: colors.folicular,
+  condiciones: colors.ovulacion,
+  fertilidad: colors.folicular,
 };
 
 const CATEGORY_ORDER: ArticleCategory[] = [
@@ -40,7 +40,7 @@ export default function LibraryScreen() {
           style={({ pressed }) => [styles.breatheCard, pressed && { opacity: 0.9 }]}
         >
           <View style={styles.breatheIcon}>
-            <HeartIcon size={22} color="#4F6E50" />
+            <HeartIcon size={22} color={colors.onDark} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={[type.cardTitle, { color: colors.ink }]}>Respirar un minuto</Text>
@@ -113,14 +113,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
     padding: space.lg,
-    borderWidth: 1,
-    borderColor: colors.line,
+    borderWidth: 2,
+    borderColor: colors.outline,
   },
   breatheIcon: {
     width: 42,
     height: 42,
     borderRadius: radius.sm + 2,
-    backgroundColor: "#E1E9DD",
+    backgroundColor: colors.folicular,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -128,6 +128,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
+    borderWidth: 2,
+    borderColor: colors.outline,
     overflow: "hidden",
   },
   // Franja de color al costado en vez de un tile de icono: distingue la
@@ -142,7 +144,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   flagPill: {
-    backgroundColor: "#F5E9E3",
+    backgroundColor: "#EFD9C6",
     borderRadius: radius.pill,
     paddingVertical: 3,
     paddingHorizontal: space.md,
