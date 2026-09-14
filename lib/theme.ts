@@ -55,18 +55,22 @@ export const colors = {
   // Degradados envolventes para las tarjetas héroe (from → to). El stop
   // claro se mantiene más oscuro que el tono sólido de la fase (arriba)
   // porque encima va texto color hueso: un mango o una oliva a máxima luz
-  // no sostienen el contraste con `onDark`.
+  // no sostienen el contraste ni con `onDark` ni con las variantes
+  // traslúcidas (`onDarkSoft`, `onDarkFaint`) que usan el saludo y el
+  // cuerpo de la tarjeta — el texto vive en la esquina donde el gradiente
+  // está en su punto más claro, así que ese extremo es el que tiene que
+  // sostener el contraste, no el extremo oscuro.
   gradients: {
-    menstrual: ["#A83820", "#6B1F0C"] as const,
-    folicular: ["#5C7A32", "#33421A"] as const,
-    ovulacion: ["#A66B18", "#6E4310"] as const,
+    menstrual: ["#94311C", "#6B1F0C"] as const,
+    folicular: ["#465D26", "#33421A"] as const,
+    ovulacion: ["#784D11", "#6E4310"] as const,
     lutea: ["#7A3580", "#4A1E4F"] as const,
-    plum: ["#8C4A2E", "#452312"] as const,
+    plum: ["#81442A", "#452312"] as const,
   },
 
   onDark: "#FBF3E7",
-  onDarkSoft: "rgba(251, 243, 231, 0.75)",
-  onDarkFaint: "rgba(251, 243, 231, 0.48)",
+  onDarkSoft: "rgba(251, 243, 231, 0.8)",
+  onDarkFaint: "rgba(251, 243, 231, 0.6)",
 };
 
 export const fonts = {
