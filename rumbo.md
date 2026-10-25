@@ -64,7 +64,9 @@ lo que se ve primero.
    forma y CORS cerrado, del estilo del que ya existe en el backend de
    BrainBit (otro proyecto propio) pero apuntando a Anthropic en vez de
    Groq.
-2. **EAS Build y publicación** en Play Store / App Store. Los recordatorios
+2. **EAS Build y publicación** en Play Store / App Store (`eas.json` ya
+   está; faltan las cuentas, los secrets, la política de privacidad y
+   correr los builds). Los recordatorios
    son la primera función que **no se puede probar en el navegador**: hasta
    que haya un build nativo, quedan verificados solo por sus tests.
    Pendiente también probar el ingreso por mail de punta a punta contra un

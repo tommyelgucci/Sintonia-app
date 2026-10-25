@@ -121,9 +121,36 @@ e iOS**: un navegador con la pestaña cerrada no puede disparar un aviso
 local, así que en web la pantalla lo explica en vez de simular que quedó
 agendado.
 
+## Publicar con EAS Build
+
+`eas.json` ya define tres perfiles: `development` (cliente de desarrollo),
+`preview` (APK / build interno para probar en un dispositivo) y
+`production` (para las tiendas, con el número de build autoincrementado).
+
+```bash
+npm install -g eas-cli
+eas login
+eas init                                  # crea el proyecto en tu cuenta de Expo
+eas secret:create --name EXPO_PUBLIC_SUPABASE_URL --value ...
+eas secret:create --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value ...
+eas secret:create --name EXPO_PUBLIC_AI_ENDPOINT --value ...
+eas build --profile preview --platform android   # primero un build de prueba
+```
+
+Las variables `EXPO_PUBLIC_*` se incrustan en el bundle: sirven para la URL
+y la anon key (públicas por diseño), **nunca** para una API key de
+Anthropic. Sin `EXPO_PUBLIC_AI_ENDPOINT` el build sale sin asistente.
+
+Antes de subir a las tiendas hace falta, de tu lado: cuenta de Apple
+Developer y de Google Play, una política de privacidad publicada en una URL
+(las dos tiendas la exigen, y más en una app de salud con datos de ciclo),
+y completar la declaración de datos de cada tienda. `bundleIdentifier` y
+`package` ya están en `app.json` (`app.sintonia.mobile`).
+
 ## Qué falta para producción
 
 - Conectar `lib/ai.ts` a un endpoint propio con la API de Claude.
-- Publicación en Play Store / App Store — falta configurar EAS Build.
+- Publicación en Play Store / App Store — la config de EAS está lista;
+  falta correr los builds con tus cuentas (ver "Publicar con EAS Build").
 
 Ver `rumbo.md` para el orden y el detalle.
