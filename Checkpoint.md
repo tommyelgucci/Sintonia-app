@@ -11,6 +11,20 @@ reales, no por cada commit individual.
 
 ---
 
+## 2026-10-25 — Proxy del asistente de IA
+
+**Rama:** `main` (sin commitear todavía).
+
+- Edge Function `supabase/functions/ai-proxy`: recibe `{ question, context }`,
+  llama a la API de Claude y devuelve `{ answer }`. Lógica pura en
+  `logic.ts` con tests (validación, límites de tamaño, CORS, rate limit por
+  IP, system prompt con las reglas de la app).
+- `index.ts` queda fuera de `tsc` (es Deno); `logic.ts` sí se chequea y
+  testea con jest.
+- No verificado: ninguna llamada real a Anthropic ni deploy.
+
+---
+
 ## 2026-08-07 — Estadísticas, registro de flujo vaginal
 
 **Rama:** `claude/app-sintunia-hufnmt` · commiteado y pusheado, sin PR
