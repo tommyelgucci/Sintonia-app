@@ -11,6 +11,17 @@ reales, no por cada commit individual.
 
 ---
 
+## 2026-10-25 — Config de EAS Build
+
+**Rama:** `claude/config-eas` (desde `main`).
+
+- `eas.json` con perfiles `development`, `preview` (APK) y `production`
+  (autoincremento de build), y la guía de pasos en el README.
+- No verificado: no se corrió `eas build` (requiere cuenta de Expo). Queda
+  también pendiente la política de privacidad pública que piden las tiendas.
+
+---
+
 ## 2026-08-07 — Estadísticas, registro de flujo vaginal
 
 **Rama:** `claude/app-sintunia-hufnmt` · commiteado y pusheado, sin PR
