@@ -5,6 +5,10 @@ producto; `CLAUDE.md` es cómo está construido.
 
 Última actualización: agosto 2026.
 
+Borrador de la política de privacidad: `docs/politica-de-privacidad.md` (sin
+revisar, con pendientes que bloquean publicar: borrado de cuenta y dos
+discrepancias entre el código y lo que la app le dice a la usuaria).
+
 ## De qué se trata
 
 Una app de ciclo menstrual que no trata a la usuaria como un dato de
