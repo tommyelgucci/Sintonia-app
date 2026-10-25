@@ -11,6 +11,23 @@ reales, no por cada commit individual.
 
 ---
 
+## 2026-10-25 — Pantalla del asistente
+
+**Rama:** `claude/pantalla-asistente` (desde `main`; independiente del PR
+del proxy).
+
+- `app/assistant.tsx` ("Preguntar"): campo de pregunta, tres sugeridas, el
+  aviso de qué sale del dispositivo (`AI_DISCLOSURE`, sin notas) y el de que
+  no reemplaza una consulta médica. Sin predicción pide cargar un período.
+- `lib/aiRules.ts` (con tests): límite de 500 caracteres igual al del proxy,
+  validación y textos.
+- La fila "Preguntar" en la home solo aparece si hay
+  `EXPO_PUBLIC_AI_ENDPOINT` y no en modo embarazo.
+- Verificado en web contra un endpoint de mentira (llega el contexto, sin
+  notas). No verificado contra el proxy ni Claude reales.
+
+---
+
 ## 2026-08-07 — Estadísticas, registro de flujo vaginal
 
 **Rama:** `claude/app-sintunia-hufnmt` · commiteado y pusheado, sin PR

@@ -57,6 +57,7 @@ export default function RootLayout() {
       <Stack.Screen name="library/index" options={{ title: "Aprender" }} />
       <Stack.Screen name="library/[id]" options={{ title: "Aprender" }} />
       <Stack.Screen name="breathe" options={{ title: "Respirar" }} />
+      <Stack.Screen name="assistant" options={{ title: "Preguntar" }} />
       <Stack.Screen name="intention" options={{ title: "Objetivo" }} />
     </Stack>
   );

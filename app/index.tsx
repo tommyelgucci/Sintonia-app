@@ -12,6 +12,7 @@ import { getFertilityInfo, FERTILITY_COPY } from "@/lib/fertility";
 import { getWeekContent } from "@/lib/pregnancyContent";
 import { PHASE_NOTES } from "@/lib/phaseNotes";
 import { formatDateEs, greetingForHour } from "@/lib/format";
+import { AI_SUPPORTED } from "@/lib/aiRules";
 import { colors, radius, space, type } from "@/lib/theme";
 import {
   ActionRow,
@@ -29,6 +30,7 @@ import {
   CalendarIcon,
   CalendarPlusIcon,
   ChartIcon,
+  ChatIcon,
   ChevronRightIcon,
   DropletIcon,
   LinkPeopleIcon,
@@ -183,6 +185,18 @@ export default function HomeScreen() {
         subtitle="Avisos de período, ventana fértil o registro"
         onPress={() => router.push("/reminders")}
       />
+      {/* Sin endpoint no hay asistente; en embarazo la predicción del ciclo
+          no aplica y la respuesta saldría desfasada. */}
+      {AI_SUPPORTED && !pregnancy.progress && (
+        <ActionRow
+          index={startIndex + 7}
+          icon={<ChatIcon size={21} color={colors.onDark} />}
+          tint={colors.lutea}
+          title="Preguntar"
+          subtitle="Una duda sobre tu ciclo, con tus datos de contexto"
+          onPress={() => router.push("/assistant")}
+        />
+      )}
     </>
   );
 
