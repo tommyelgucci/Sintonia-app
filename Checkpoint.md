@@ -11,16 +11,20 @@ reales, no por cada commit individual.
 
 ---
 
-## 2026-10-25 — Borrador de política de privacidad
+## 2026-10-25 — Pantalla del asistente
 
-**Rama:** `claude/politica-privacidad` (desde `main`).
+**Rama:** `claude/pantalla-asistente` (desde `main`; independiente del PR
+del proxy).
 
-- `docs/politica-de-privacidad.md`: borrador a partir de lo que hace el
-  código, con `[CORCHETES]` por completar. Sin revisión legal.
-- Hallazgos que quedaron como pendientes (no se tocó código): no hay
-  borrado de cuenta en la app; el copy de notas en `log.tsx` dice que no
-  salen del dispositivo y con cuenta sí se sincronizan; las señales del flujo
-  se ocultan solo en el cliente, la RLS deja leer la fila entera.
+- `app/assistant.tsx` ("Preguntar"): campo de pregunta, tres sugeridas, el
+  aviso de qué sale del dispositivo (`AI_DISCLOSURE`, sin notas) y el de que
+  no reemplaza una consulta médica. Sin predicción pide cargar un período.
+- `lib/aiRules.ts` (con tests): límite de 500 caracteres igual al del proxy,
+  validación y textos.
+- La fila "Preguntar" en la home solo aparece si hay
+  `EXPO_PUBLIC_AI_ENDPOINT` y no en modo embarazo.
+- Verificado en web contra un endpoint de mentira (llega el contexto, sin
+  notas). No verificado contra el proxy ni Claude reales.
 ## 2026-10-25 — Proxy del asistente de IA
 
 **Rama:** `main` (sin commitear todavía).
@@ -32,6 +36,19 @@ reales, no por cada commit individual.
 - `index.ts` queda fuera de `tsc` (es Deno); `logic.ts` sí se chequea y
   testea con jest.
 - No verificado: ninguna llamada real a Anthropic ni deploy.
+
+---
+
+## 2026-10-25 — Borrador de política de privacidad
+
+**Rama:** `claude/politica-privacidad` (desde `main`).
+
+- `docs/politica-de-privacidad.md`: borrador a partir de lo que hace el
+  código, con `[CORCHETES]` por completar. Sin revisión legal.
+- Hallazgos que quedaron como pendientes (no se tocó código): no hay
+  borrado de cuenta en la app; el copy de notas en `log.tsx` dice que no
+  salen del dispositivo y con cuenta sí se sincronizan; las señales del flujo
+  se ocultan solo en el cliente, la RLS deja leer la fila entera.
 
 ---
 

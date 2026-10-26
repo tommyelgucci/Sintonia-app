@@ -261,6 +261,23 @@ export function BellIcon({ size = 24, color = "currentColor", strokeWidth = 1.6 
   );
 }
 
+/** Burbuja de diálogo con tres puntos: el asistente. */
+export function ChatIcon({ size = 24, color = "currentColor", strokeWidth = 1.6 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Path
+        d="M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5h-7l-4.5 3.5V16.5H5A1.5 1.5 0 0 1 3.5 15V7A1.5 1.5 0 0 1 5 5.5Z"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinejoin="round"
+      />
+      <Circle cx={8.5} cy={11} r={0.9} fill={color} />
+      <Circle cx={12} cy={11} r={0.9} fill={color} />
+      <Circle cx={15.5} cy={11} r={0.9} fill={color} />
+    </Svg>
+  );
+}
+
 export function ShieldIcon({ size = 24, color = "currentColor", strokeWidth = 1.6 }: IconProps) {
   return (
     <Svg {...base(size)}>
