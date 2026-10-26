@@ -13,9 +13,9 @@ que cada usuaria habilita explícitamente.
   la app funciona sin cuenta ni red.
 - **Backend**: Supabase (Postgres + Auth), solo para sincronizar y para la
   vinculación de pareja. Ver `supabase/schema.sql`.
-- **IA**: módulo en `lib/ai.ts`, listo para conectar a un endpoint propio
-  que hable con la API de Claude (ver nota de seguridad ahí sobre por qué
-  no directo desde el cliente).
+- **IA**: `lib/ai.ts` arma el contexto y le pega a la Edge Function
+  `supabase/functions/ai-proxy`, que es la única que tiene la API key de
+  Claude (ver "Desplegar el proxy de IA").
 
 ## Cómo correr el proyecto
 
@@ -62,8 +62,10 @@ lib/
   db.ts               almacenamiento local (expo-sqlite)
   supabase.ts         cliente de Supabase
   sync.ts             puente entre lo local y Supabase
-  ai.ts               asistente de IA (placeholder hasta conectar backend)
+  ai.ts               asistente de IA (cliente del proxy)
 supabase/
+  functions/ai-proxy/  proxy a la API de Claude (Edge Function + lógica pura
+                        con tests)
   schema.sql           schema + RLS (profiles, cycles, daily_logs,
                         connections, connection_invites, share_settings)
 ```
@@ -121,9 +123,24 @@ e iOS**: un navegador con la pestaña cerrada no puede disparar un aviso
 local, así que en web la pantalla lo explica en vez de simular que quedó
 agendado.
 
+## Desplegar el proxy de IA
+
+```bash
+supabase secrets set ANTHROPIC_API_KEY=sk-ant-... ALLOWED_ORIGINS=https://tu-dominio-web
+supabase functions deploy ai-proxy --no-verify-jwt
+```
+
+Después, `EXPO_PUBLIC_AI_ENDPOINT=https://<proyecto>.supabase.co/functions/v1/ai-proxy`
+en `.env`. `--no-verify-jwt` porque la app funciona sin cuenta. Opcional:
+`AI_MODEL` (default `claude-haiku-5-5`). `ALLOWED_ORIGINS` solo importa para
+la versión web; las apps nativas no mandan `Origin`. El rate limit (6 por
+minuto y 40 por día, por IP) es en memoria de cada instancia: frena el uso
+abusivo casual, no un ataque distribuido.
+
 ## Qué falta para producción
 
-- Conectar `lib/ai.ts` a un endpoint propio con la API de Claude.
+- Desplegar el proxy y probarlo de punta a punta (hoy verificado solo por
+  sus tests de lógica, sin llamada real a Anthropic).
 - Publicación en Play Store / App Store — falta configurar EAS Build.
 
 Ver `rumbo.md` para el orden y el detalle.
