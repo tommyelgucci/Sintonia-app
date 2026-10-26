@@ -126,12 +126,15 @@ pasa sobre todo en el server: `share_settings` decide, por conexión, qué ve
 la otra persona (fechas de ciclo sí por default; síntomas, ánimo y notas
 solo si se habilitan).
 
-El cliente agrega una segunda capa para lo más sensible:
-`fetchPartnerDailyLogs` en `sync.ts` **no pide `discharge_signs`** aunque
-la fila lo tenga y el permiso general esté activado — el color, el olor y
-la textura del flujo son más sensibles que un síntoma, y esa pantalla no
-los muestra. Cada campo personal nuevo se decide solo: pensá si entra en
-ese `select` en vez de ensancharlo por inercia.
+Lo más sensible no depende del cliente: las señales del flujo
+(`discharge_signs`) viven en su propia tabla, `daily_log_private`, cuya
+única política es "solo la dueña". No son una columna de `daily_logs` a
+propósito: RLS filtra filas, no columnas, así que mientras estuvieron ahí
+una conexión con síntomas o ánimo habilitados podía leerlas con una consulta
+directa, aunque la app no las pidiera. Cada campo personal nuevo se decide
+solo: si es más sensible que un síntoma, va a esa tabla y no a `daily_logs`;
+y ojo con las columnas que sí quedan en `daily_logs` (como `notes`), que una
+conexión con síntomas o ánimo habilitados lee enteras.
 
 ### Navegación y estado
 
