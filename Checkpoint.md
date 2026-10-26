@@ -21,6 +21,17 @@ reales, no por cada commit individual.
   borrado de cuenta en la app; el copy de notas en `log.tsx` dice que no
   salen del dispositivo y con cuenta sí se sincronizan; las señales del flujo
   se ocultan solo en el cliente, la RLS deja leer la fila entera.
+## 2026-10-25 — Proxy del asistente de IA
+
+**Rama:** `main` (sin commitear todavía).
+
+- Edge Function `supabase/functions/ai-proxy`: recibe `{ question, context }`,
+  llama a la API de Claude y devuelve `{ answer }`. Lógica pura en
+  `logic.ts` con tests (validación, límites de tamaño, CORS, rate limit por
+  IP, system prompt con las reglas de la app).
+- `index.ts` queda fuera de `tsc` (es Deno); `logic.ts` sí se chequea y
+  testea con jest.
+- No verificado: ninguna llamada real a Anthropic ni deploy.
 
 ---
 

@@ -3,10 +3,9 @@ import type { DailyLog } from "./types";
 import { findRelevantArticles } from "./library";
 
 /**
- * Asistente de IA sobre el ciclo. Placeholder: no se conecta a nada todavía
- * (falta EXPO_PUBLIC_ANTHROPIC_API_KEY o, mejor, un proxy server-side —
- * ver nota de seguridad abajo), pero define la forma final para no tener
- * que tocar las pantallas cuando se conecte de verdad.
+ * Asistente de IA sobre el ciclo. Le pega a un proxy propio
+ * (EXPO_PUBLIC_AI_ENDPOINT); el que está en el repo es la Edge Function
+ * `supabase/functions/ai-proxy`, que es la que habla con la API de Claude.
  */
 
 export interface AskAboutCycleParams {
@@ -71,7 +70,7 @@ function buildContext({ question, prediction, recentLogs }: AskAboutCycleParams)
  * Anthropic desde el cliente): la app pública va a terminar en la Play
  * Store, y una API key de Anthropic embebida en el bundle queda expuesta a
  * cualquiera que lo descompile. Este mismo contexto (buildContext) es lo
- * que ese endpoint le pasaría a Claude como system prompt.
+ * que el proxy le pasa a Claude como parte del system prompt.
  */
 export async function askAboutCycle(params: AskAboutCycleParams): Promise<string> {
   const endpoint = process.env.EXPO_PUBLIC_AI_ENDPOINT;
@@ -86,6 +85,9 @@ export async function askAboutCycle(params: AskAboutCycleParams): Promise<string
     body: JSON.stringify({ question: params.question, context }),
   });
 
+  if (response.status === 429) {
+    throw new Error("Hiciste muchas consultas seguidas. Probá de nuevo en un rato.");
+  }
   if (!response.ok) {
     throw new Error(`El asistente de IA respondió con error ${response.status}`);
   }
