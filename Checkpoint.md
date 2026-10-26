@@ -11,6 +11,31 @@ reales, no por cada commit individual.
 
 ---
 
+## 2026-10-26 — Señales del flujo en tabla aparte
+
+**Rama:** `claude/aislar-senales-flujo` (desde `main`).
+
+- `discharge_signs` pasa de columna de `daily_logs` a la tabla
+  `daily_log_private` (RLS solo la dueña). Antes la política de lectura de
+  `daily_logs` la dejaba leer a una conexión con síntomas o ánimo
+  habilitados, aunque el cliente no la pidiera.
+- `schema.sql` migra proyectos ya desplegados (copia y borra la columna) y
+  sigue siendo reejecutable; `pushDailyLogToCloud` escribe en las dos tablas.
+- Verificado contra un Postgres 16 real con un stub de `auth`: control en el
+  esquema viejo (la pareja leía las señales), migración, RLS de la pareja y
+  de la dueña, reejecución e instalación limpia. Sin probar contra un
+  proyecto de Supabase real ni con el cliente corriendo.
+- **Sigue abierto:** `notes` sigue en `daily_logs` y la misma conexión la
+  lee; el texto de `log.tsx` dice lo contrario.
+- **Al desplegar:** cliente y esquema van juntos. Con el esquema nuevo, un
+  cliente viejo (que manda `discharge_signs` a `daily_logs`) falla el upsert
+  entero; con el cliente nuevo y el esquema viejo, las señales no se
+  respaldan hasta correr `schema.sql`. Los errores no se chequean y fallan
+  en silencio. Hoy no importa porque la app no está publicada; si ya hubiera
+  usuarias, hay que actualizar primero el cliente y correr el esquema después.
+
+---
+
 ## 2026-08-07 — Estadísticas, registro de flujo vaginal
 
 **Rama:** `claude/app-sintunia-hufnmt` · commiteado y pusheado, sin PR

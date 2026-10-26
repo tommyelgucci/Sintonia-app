@@ -48,17 +48,44 @@ create table if not exists daily_logs (
   flow flow_intensity not null default 'none',
   symptoms text[] not null default '{}',
   mood text[] not null default '{}',
-  discharge_signs text[] not null default '{}',
   notes text,
   created_at timestamptz not null default now(),
   unique (user_id, log_date)
 );
 
--- discharge_signs se agregó después del create table de arriba. En un
--- proyecto ya desplegado, "create table if not exists" no la suma sola —
--- este alter sí, y es un no-op seguro para reejecutar el script entero
--- (create table if not exists + este alter) en un proyecto que ya la tiene.
-alter table daily_logs add column if not exists discharge_signs text[] not null default '{}';
+-- Las señales del flujo vaginal viven en su propia tabla y no como columna
+-- de daily_logs a propósito: RLS filtra filas, no columnas, y la política
+-- que deja a una conexión leer daily_logs (síntomas o ánimo habilitados)
+-- le habría dado también esta columna a un cliente modificado. En una tabla
+-- aparte, cuya única política es "solo la dueña", no hay forma de que llegue
+-- a otra persona aunque se comparta todo lo demás.
+create table if not exists daily_log_private (
+  user_id uuid not null references profiles (id) on delete cascade,
+  log_date date not null,
+  discharge_signs text[] not null default '{}',
+  updated_at timestamptz not null default now(),
+  primary key (user_id, log_date)
+);
+
+-- Migración para proyectos que ya tenían daily_logs.discharge_signs: copia
+-- lo que hubiera y borra la columna. En un proyecto nuevo la columna no
+-- existe y el bloque no hace nada, así que reejecutar el script es seguro.
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'daily_logs'
+      and column_name = 'discharge_signs'
+  ) then
+    insert into daily_log_private (user_id, log_date, discharge_signs)
+      select user_id, log_date, discharge_signs
+      from daily_logs
+      where cardinality(discharge_signs) > 0
+    on conflict (user_id, log_date) do nothing;
+    alter table daily_logs drop column discharge_signs;
+  end if;
+end $$;
 
 create type connection_status as enum ('pending', 'accepted', 'revoked');
 
@@ -167,6 +194,19 @@ create policy "daily_logs: visibles para conexión según lo que comparte"
         and (s.share_symptoms or s.share_mood)
     )
   );
+
+-- ---------------------------------------------------------------------
+-- RLS: daily_log_private
+-- ---------------------------------------------------------------------
+-- Una sola política y ninguna de lectura para conexiones: es lo que garantiza
+-- que las señales del flujo no salen de la cuenta de quien las cargó.
+alter table daily_log_private enable row level security;
+
+drop policy if exists "daily_log_private: solo la dueña" on daily_log_private;
+create policy "daily_log_private: solo la dueña"
+  on daily_log_private for all
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());
 
 -- ---------------------------------------------------------------------
 -- RLS: connections
