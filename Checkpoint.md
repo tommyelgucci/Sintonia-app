@@ -39,6 +39,19 @@ del proxy).
 
 ---
 
+## 2026-10-25 — Borrador de política de privacidad
+
+**Rama:** `claude/politica-privacidad` (desde `main`).
+
+- `docs/politica-de-privacidad.md`: borrador a partir de lo que hace el
+  código, con `[CORCHETES]` por completar. Sin revisión legal.
+- Hallazgos que quedaron como pendientes (no se tocó código): no hay
+  borrado de cuenta en la app; el copy de notas en `log.tsx` dice que no
+  salen del dispositivo y con cuenta sí se sincronizan; las señales del flujo
+  se ocultan solo en el cliente, la RLS deja leer la fila entera.
+
+---
+
 ## 2026-08-07 — Estadísticas, registro de flujo vaginal
 
 **Rama:** `claude/app-sintunia-hufnmt` · commiteado y pusheado, sin PR
