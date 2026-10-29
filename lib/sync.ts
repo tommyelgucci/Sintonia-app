@@ -89,7 +89,7 @@ export async function pushDailyLogToCloud(log: DailyLog): Promise<void> {
 export async function fetchPartnerDailyLogs(partnerId: string): Promise<DailyLog[]> {
   const { data, error } = await supabase
     .from("daily_logs")
-    .select("log_date, flow, symptoms, mood, notes")
+    .select("log_date, flow, symptoms, mood")
     .eq("user_id", partnerId)
     .order("log_date", { ascending: false })
     .limit(14);
@@ -104,7 +104,9 @@ export async function fetchPartnerDailyLogs(partnerId: string): Promise<DailyLog
     // daily_log_private, que el servidor solo le deja leer a su dueña. No
     // dependen de qué columnas pida este select.
     dischargeSigns: [],
-    notes: row.notes,
+    // Las notas no se piden: la pantalla de la pareja no las muestra, y no hay
+    // por qué traerlas al dispositivo de la otra persona.
+    notes: null,
   }));
 }
 

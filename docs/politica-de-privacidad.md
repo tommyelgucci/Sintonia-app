@@ -64,8 +64,9 @@ QR; cualquiera de las dos partes puede invitar y aceptar. La vinculación es
 simétrica y sin roles.
 
 Por cada conexión decidís qué ve la otra persona: las **fechas de ciclo**
-están habilitadas por defecto; **síntomas y ánimo** (y las notas del mismo
-registro) solo si los activás. Podés cambiarlo cuando quieras. Las **señales
+están habilitadas por defecto; **síntomas y ánimo** solo si los activás. Tus
+**notas** se guardan en tu copia de la nube, pero la app no se las muestra a
+la persona vinculada. Podés cambiarlo cuando quieras. Las **señales
 del flujo vaginal** se guardan en tu copia de la nube pero el servidor no deja
 que las lea nadie más que vos, aunque tengas habilitados los síntomas. La
 otra persona también ve el nombre que elegiste.
@@ -141,12 +142,13 @@ página y la fecha de arriba, y avisamos dentro de la app antes de aplicarlo.
    falta desplegar la función y probarla con un proyecto real. Apple la exige
    para cualquier app con cuenta (guideline 5.1.1(v)); Google Play además pide
    una URL pública donde se pueda pedir el borrado sin abrir la app.
-2. **Texto de la pantalla de registro desactualizado.** `app/log.tsx` dice de
-   las notas "Queda en tu dispositivo. Nadie más lo lee.", pero con cuenta las
-   notas se sincronizan a la nube y quien tenga habilitados síntomas o ánimo
-   las puede ver (`fetchPartnerDailyLogs` las pide). Esta política describe lo
-   que pasa de verdad; el texto de `log.tsx` hay que corregirlo para que
-   coincida (la pantalla Cuenta ya está corregida).
+2. **Las notas siguen en `daily_logs`.** La app no se las muestra a nadie y
+   `fetchPartnerDailyLogs` ya no las pide, pero la política de lectura de esa
+   tabla deja leer la fila entera a una conexión con síntomas o ánimo
+   habilitados: un cliente modificado podría leerlas. Por eso el texto dice
+   que "la app no se las muestra" y no que "nadie más las lee". Para poder
+   afirmarlo sin matices, moverlas a `daily_log_private`, como las señales
+   del flujo (está anotado en `rumbo.md`).
 3. Completar: responsable, mail, fecha, región de Supabase, edad mínima,
    condiciones de Anthropic.
 4. Publicarla en una URL pública estable (las dos tiendas la piden) y usar esa

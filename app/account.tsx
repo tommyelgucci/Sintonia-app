@@ -219,9 +219,10 @@ export default function AccountScreen() {
             <Text style={[type.body, { color: colors.inkSoft, marginTop: space.sm }]}>
               Con cuenta, el servidor guarda tu mail y una copia de tus ciclos y
               registros (síntomas, ánimo y notas incluidos), como respaldo tuyo.
-              Una persona vinculada ve tus fechas de ciclo; tus síntomas, tu ánimo y
-              las notas de ese día solo si lo habilitás vos, de a una conexión por
-              vez. Las señales del flujo vaginal no las ve nadie más.
+              Una persona vinculada ve tus fechas de ciclo; tus síntomas y tu ánimo
+              solo si lo habilitás vos, de a una conexión por vez. Las señales del
+              flujo vaginal no las ve nadie más, y la app tampoco le muestra tus
+              notas a nadie.
             </Text>
           </Card>
 

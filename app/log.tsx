@@ -227,7 +227,7 @@ export default function LogScreen() {
       <Card index={5}>
         <Eyebrow>Notas</Eyebrow>
         <Text style={[type.bodySmall, { color: colors.inkFaint, marginTop: space.xs }]}>
-          Queda en tu dispositivo. Nadie más lo lee.
+          Queda en tu dispositivo y, si tenés cuenta, en tu copia de respaldo. La app no se la muestra a las personas vinculadas.
         </Text>
         <TextInput
           style={[styles.notesInput, type.body]}

@@ -78,6 +78,10 @@ lo que se ve primero.
 
 Sin fecha ni prioridad; están acá para no volver a pensarlas de cero.
 
+- Mover `notes` a `daily_log_private`, como las señales del flujo. Hoy la app
+  no las muestra a una conexión, pero la política de lectura de `daily_logs`
+  sí lo permitiría con una consulta directa. Costo: la pareja nunca podría
+  ver notas aunque se quisiera; se descartó por ahora (opción B).
 - Marcar el fin del sangrado. Hoy `periodLength` se infiere de los días con
   flujo registrado; pedirlo explícito daría predicciones mejores, pero
   agrega fricción a la pantalla de registro.

@@ -27,7 +27,12 @@ reales, no por cada commit individual.
   sigue siendo reejecutable.
 - Copia de la pantalla Cuenta corregida: decía que síntomas, ánimo y notas
   "no salen del teléfono", y con cuenta se respaldan siempre.
-- Política de privacidad actualizada (borrado y señales del flujo).
+- Notas: se eligió dejarlas en `daily_logs` (opción B) y corregir el texto de
+  `log.tsx`, que decía "Nadie más lo lee". `fetchPartnerDailyLogs` dejó de
+  pedirlas (la pantalla de la pareja no las muestra). El servidor sigue
+  permitiendo leerlas a una conexión con síntomas o ánimo habilitados; mover
+  `notes` a `daily_log_private` quedó en las ideas de `rumbo.md`.
+- Política de privacidad actualizada (borrado, señales del flujo y notas).
 - No verificado: la Edge Function no se ejecutó (no hay Deno acá) ni se
   desplegó; el flujo completo en la app tampoco.
 
