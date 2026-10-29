@@ -79,3 +79,23 @@ export function authErrorMessage(raw: string | null | undefined): string {
   }
   return `No se pudo completar: ${raw}`;
 }
+
+export const DELETE_ACCOUNT_TITLE = "Eliminar mi cuenta";
+
+/**
+ * Qué pasa y qué no pasa, dicho antes de confirmar. Lo importante es la
+ * última frase: la persona puede creer que "eliminar" borra también lo que
+ * tiene en el teléfono, y no es así.
+ */
+export const DELETE_ACCOUNT_WARNING =
+  "Se borra tu mail y toda la copia que tenés en la nube: ciclos, registros y " +
+  "notas respaldados, y tus vínculos. Las personas vinculadas dejan de ver tus " +
+  "datos. No se puede deshacer. Lo que está guardado en este teléfono no se toca.";
+
+export function deleteAccountErrorMessage(raw: string | null | undefined): string {
+  const message = (raw ?? "").toLowerCase();
+  if (message.includes("network") || message.includes("fetch") || message.includes("failed to send")) {
+    return "No hay conexión. Tu cuenta sigue como estaba; probá de nuevo con internet.";
+  }
+  return "No se pudo eliminar la cuenta ahora. Probá de nuevo en un rato.";
+}

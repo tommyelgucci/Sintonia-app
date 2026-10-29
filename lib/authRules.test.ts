@@ -1,5 +1,7 @@
 import {
+  DELETE_ACCOUNT_WARNING,
   authErrorMessage,
+  deleteAccountErrorMessage,
   isValidEmail,
   isValidOtpCode,
   normalizeEmail,
@@ -94,5 +96,20 @@ describe("authErrorMessage", () => {
     expect(authErrorMessage(null)).toMatch(/probá de nuevo/i);
     expect(authErrorMessage(undefined)).toMatch(/probá de nuevo/i);
     expect(authErrorMessage("")).toMatch(/probá de nuevo/i);
+  });
+});
+
+describe("eliminar cuenta", () => {
+  it("el aviso aclara que lo del teléfono no se borra y que no se deshace", () => {
+    expect(DELETE_ACCOUNT_WARNING).toContain("este teléfono no se toca");
+    expect(DELETE_ACCOUNT_WARNING).toContain("No se puede deshacer");
+  });
+
+  it("traduce la falta de conexión sin inventar otra causa", () => {
+    expect(deleteAccountErrorMessage("FunctionsFetchError: Failed to send a request")).toContain(
+      "No hay conexión"
+    );
+    expect(deleteAccountErrorMessage(null)).toContain("No se pudo eliminar");
+    expect(deleteAccountErrorMessage("algo raro")).toContain("No se pudo eliminar");
   });
 });

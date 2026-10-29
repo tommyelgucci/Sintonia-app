@@ -108,10 +108,19 @@ create table if not exists connection_invites (
   inviter_id uuid not null references profiles (id) on delete cascade,
   code text not null unique,
   expires_at timestamptz not null default (now() + interval '7 days'),
-  used_by uuid references profiles (id),
+  used_by uuid references profiles (id) on delete set null,
   used_at timestamptz,
   created_at timestamptz not null default now()
 );
+
+-- used_by se creó sin "on delete": borrar la cuenta de alguien que canjeó una
+-- invitación fallaba por la clave foránea, y justo es el caso de cualquiera
+-- que se vinculó. En un proyecto ya desplegado "create table if not exists"
+-- no corrige la restricción, así que se rehace acá (reejecutable).
+alter table connection_invites drop constraint if exists connection_invites_used_by_fkey;
+alter table connection_invites
+  add constraint connection_invites_used_by_fkey
+  foreign key (used_by) references profiles (id) on delete set null;
 
 create table if not exists share_settings (
   id uuid primary key default gen_random_uuid(),

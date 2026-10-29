@@ -11,6 +11,28 @@ reales, no por cada commit individual.
 
 ---
 
+## 2026-10-29 — Borrado de cuenta
+
+**Rama:** `claude/borrado-de-cuenta` (desde `main`).
+
+- Edge Function `delete-account`: identifica a la persona por su JWT (nunca
+  por el cuerpo), borra de `auth.users` con la service key y el resto cae por
+  cascade. `lib/auth.ts` suma `deleteAccount()` y la pantalla Cuenta, el
+  botón "Eliminar mi cuenta" con el aviso de qué se borra y qué no (lo del
+  teléfono no se toca).
+- Bug encontrado y corregido: `connection_invites.used_by` no tenía
+  `on delete`, así que borrar a quien canjeó una invitación (cualquiera que
+  se vinculó) fallaba. Verificado con control en un Postgres 16 real: falla
+  con el esquema anterior, cascadea completo con el nuevo; `schema.sql`
+  sigue siendo reejecutable.
+- Copia de la pantalla Cuenta corregida: decía que síntomas, ánimo y notas
+  "no salen del teléfono", y con cuenta se respaldan siempre.
+- Política de privacidad actualizada (borrado y señales del flujo).
+- No verificado: la Edge Function no se ejecutó (no hay Deno acá) ni se
+  desplegó; el flujo completo en la app tampoco.
+
+---
+
 ## 2026-10-26 — Señales del flujo en tabla aparte
 
 **Rama:** `claude/aislar-senales-flujo` (desde `main`).
