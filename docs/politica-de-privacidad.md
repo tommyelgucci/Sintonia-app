@@ -64,10 +64,11 @@ QR; cualquiera de las dos partes puede invitar y aceptar. La vinculación es
 simétrica y sin roles.
 
 Por cada conexión decidís qué ve la otra persona: las **fechas de ciclo**
-están habilitadas por defecto; **síntomas y ánimo** (y las notas del mismo
-registro) solo si los activás. Podés cambiarlo cuando quieras. Las **señales
-del flujo vaginal** se guardan en tu copia de la nube pero la app no se las
-muestra a la persona vinculada, aunque tengas habilitados los síntomas. La
+están habilitadas por defecto; **síntomas y ánimo** solo si los activás. Tus
+**notas** se guardan en tu copia de la nube, pero la app no se las muestra a
+la persona vinculada. Podés cambiarlo cuando quieras. Las **señales
+del flujo vaginal** se guardan en tu copia de la nube pero el servidor no deja
+que las lea nadie más que vos, aunque tengas habilitados los síntomas. La
 otra persona también ve el nombre que elegiste.
 
 ## Asistente de IA
@@ -114,9 +115,11 @@ que se elimine tu cuenta. Los códigos de invitación vencen a los 7 días.
 
 Podés pedir acceso, rectificación, borrado y portabilidad de tus datos, y
 retirar tu consentimiento en cualquier momento, escribiendo a
-`[MAIL DE PRIVACIDAD]`. Eliminar tu cuenta borra de la nube tu perfil, tus
-ciclos, registros, conexiones y preferencias de compartir. `[COMPLETAR: cómo se
-elimina la cuenta — hoy no hay botón en la app, ver pendientes]`. Podés
+`[MAIL DE PRIVACIDAD]`. Podés eliminar tu cuenta cuando quieras desde la
+app (Cuenta → Eliminar mi cuenta): se borra de la nube tu mail, tu perfil, tus
+ciclos, registros (con las notas y las señales del flujo), conexiones y
+preferencias de compartir, y no se puede deshacer. Lo que está guardado en tu
+teléfono no se toca; si querés borrarlo también, desinstalá la app. Podés
 corregir o borrar registros desde la app, y quitar una conexión cuando
 quieras.
 
@@ -134,27 +137,21 @@ página y la fecha de arriba, y avisamos dentro de la app antes de aplicarlo.
 
 ## Pendientes antes de publicar (borrar al publicar)
 
-1. **No hay forma de eliminar la cuenta desde la app.** Apple la exige para
-   cualquier app que permita crear cuenta (guideline 5.1.1(v)) y Google Play
-   pide una vía de borrado y una URL para pedirlo. Hoy `lib/auth.ts` solo
-   tiene cerrar sesión. Hay que construir el borrado (una Edge Function con
-   la service key que elimine al usuario de `auth.users`; el resto cae por
-   `on delete cascade`) y recién ahí completar la sección de derechos.
-2. **Texto de la pantalla de registro desactualizado.** `app/log.tsx` dice de
-   las notas "Queda en tu dispositivo. Nadie más lo lee.", pero con cuenta las
-   notas se sincronizan a la nube y quien tenga habilitados síntomas o ánimo
-   las puede ver (`fetchPartnerDailyLogs` las pide). Esta política describe lo
-   que pasa de verdad; el texto de la app hay que corregirlo para que coincida.
-3. **Las señales del flujo vaginal se ocultan en el cliente, no en el
-   servidor.** La política RLS de `daily_logs` en `supabase/schema.sql` deja
-   leer la fila entera a una conexión con síntomas o ánimo habilitados, y
-   `discharge_signs` es una columna de esa misma fila: la app no la pide, pero
-   el servidor no se lo impide a un cliente modificado. Antes de afirmar sin
-   matices que no llega a nadie, moverlas a una tabla aparte o a una vista
-   sin esa columna.
-4. Completar: responsable, mail, fecha, región de Supabase, edad mínima,
+1. **Desplegar y probar el borrado de cuenta.** Ya está en el código
+   (`supabase/functions/delete-account` y el botón en la pantalla Cuenta), pero
+   falta desplegar la función y probarla con un proyecto real. Apple la exige
+   para cualquier app con cuenta (guideline 5.1.1(v)); Google Play además pide
+   una URL pública donde se pueda pedir el borrado sin abrir la app.
+2. **Las notas siguen en `daily_logs`.** La app no se las muestra a nadie y
+   `fetchPartnerDailyLogs` ya no las pide, pero la política de lectura de esa
+   tabla deja leer la fila entera a una conexión con síntomas o ánimo
+   habilitados: un cliente modificado podría leerlas. Por eso el texto dice
+   que "la app no se las muestra" y no que "nadie más las lee". Para poder
+   afirmarlo sin matices, moverlas a `daily_log_private`, como las señales
+   del flujo (está anotado en `rumbo.md`).
+3. Completar: responsable, mail, fecha, región de Supabase, edad mínima,
    condiciones de Anthropic.
-5. Publicarla en una URL pública estable (las dos tiendas la piden) y usar esa
+4. Publicarla en una URL pública estable (las dos tiendas la piden) y usar esa
    misma URL en las fichas de las tiendas y dentro de la app.
-6. Que las declaraciones de datos de App Store y Google Play coincidan con
+5. Que las declaraciones de datos de App Store y Google Play coincidan con
    esta política (datos de salud, mail, contenido enviado a un tercero para IA).

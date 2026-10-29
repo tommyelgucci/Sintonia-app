@@ -7,8 +7,10 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { sendEmailCode, signOut, verifyEmailCode } from "@/lib/auth";
+import { deleteAccount, sendEmailCode, signOut, verifyEmailCode } from "@/lib/auth";
 import {
+  DELETE_ACCOUNT_TITLE,
+  DELETE_ACCOUNT_WARNING,
   isValidEmail,
   isValidOtpCode,
   normalizeEmail,
@@ -85,6 +87,26 @@ export default function AccountScreen() {
     );
   }
 
+  function confirmDeleteAccount() {
+    confirmDestructive(
+      DELETE_ACCOUNT_TITLE,
+      DELETE_ACCOUNT_WARNING,
+      async () => {
+        setBusy(true);
+        try {
+          await deleteAccount();
+          await reload();
+          notify("Cuenta eliminada", "Se borró tu cuenta y la copia en la nube.");
+        } catch (error) {
+          notify("No se pudo eliminar", (error as Error).message);
+        } finally {
+          setBusy(false);
+        }
+      },
+      "Eliminar"
+    );
+  }
+
   if (step === "code") {
     return (
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -150,6 +172,7 @@ export default function AccountScreen() {
             </Text>
           </Card>
           <QuietButton label="Cerrar sesión" onPress={confirmSignOut} />
+          <QuietButton label={busy ? "Eliminando..." : DELETE_ACCOUNT_TITLE} onPress={confirmDeleteAccount} />
         </>
       ) : (
         <>
@@ -194,11 +217,21 @@ export default function AccountScreen() {
           <Card index={3}>
             <Eyebrow>Qué se guarda</Eyebrow>
             <Text style={[type.body, { color: colors.inkSoft, marginTop: space.sm }]}>
-              En el servidor queda tu mail y lo que elijas compartir con cada
-              persona vinculada. Tus síntomas, tu ánimo y tus notas no salen del
-              teléfono salvo que los habilites vos, de a una conexión por vez.
+              Con cuenta, el servidor guarda tu mail y una copia de tus ciclos y
+              registros (síntomas, ánimo y notas incluidos), como respaldo tuyo.
+              Una persona vinculada ve tus fechas de ciclo; tus síntomas y tu ánimo
+              solo si lo habilitás vos, de a una conexión por vez. Las señales del
+              flujo vaginal no las ve nadie más, y la app tampoco le muestra tus
+              notas a nadie.
             </Text>
           </Card>
+
+          {state.status === "anonymous" && (
+            <QuietButton
+              label={busy ? "Eliminando..." : DELETE_ACCOUNT_TITLE}
+              onPress={confirmDeleteAccount}
+            />
+          )}
         </>
       )}
     </ScrollView>

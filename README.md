@@ -137,6 +137,20 @@ la versión web; las apps nativas no mandan `Origin`. El rate limit (6 por
 minuto y 40 por día, por IP) es en memoria de cada instancia: frena el uso
 abusivo casual, no un ataque distribuido.
 
+## Desplegar el borrado de cuenta
+
+```bash
+supabase functions deploy delete-account
+```
+
+A diferencia del proxy de IA, **con** verificación de JWT: sin sesión no hay a
+quién borrar, y la función identifica a la persona por su token, nunca por el
+cuerpo del pedido. Usa `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY`, que
+Supabase ya inyecta en las Edge Functions (no hay que cargarlas). Para la
+versión web, `ALLOWED_ORIGINS` igual que en el proxy. Antes de desplegar,
+corré el `schema.sql` actual: sin la corrección de `used_by`, borrar a quien
+canjeó una invitación falla.
+
 ## Qué falta para producción
 
 - Desplegar el proxy y probarlo de punta a punta (hoy verificado solo por

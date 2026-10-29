@@ -134,7 +134,8 @@ una conexión con síntomas o ánimo habilitados podía leerlas con una consulta
 directa, aunque la app no las pidiera. Cada campo personal nuevo se decide
 solo: si es más sensible que un síntoma, va a esa tabla y no a `daily_logs`;
 y ojo con las columnas que sí quedan en `daily_logs` (como `notes`), que una
-conexión con síntomas o ánimo habilitados lee enteras.
+conexión con síntomas o ánimo habilitados lee enteras: hoy la app ni las pide
+ni las muestra, pero el servidor no lo impide.
 
 ### Navegación y estado
 

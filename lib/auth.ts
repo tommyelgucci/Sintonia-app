@@ -1,6 +1,7 @@
 import { supabase } from "./supabase";
 import {
   authErrorMessage,
+  deleteAccountErrorMessage,
   normalizeEmail,
   otpTypeFor,
   type AuthState,
@@ -89,6 +90,20 @@ export async function verifyEmailCode(
 
 export async function signOut(): Promise<void> {
   await supabase.auth.signOut();
+}
+
+/**
+ * Elimina la cuenta y la copia en la nube (Edge Function `delete-account`,
+ * que identifica a la persona por su sesión). Lo guardado en el teléfono no
+ * se toca: la app es local-first y esos datos son de quien la tiene.
+ *
+ * La sesión se cierra solo en este dispositivo (`scope: "local"`): como el
+ * usuario ya no existe en el servidor, un cierre global fallaría.
+ */
+export async function deleteAccount(): Promise<void> {
+  const { error } = await supabase.functions.invoke("delete-account", { method: "POST" });
+  if (error) throw new Error(deleteAccountErrorMessage(error.message));
+  await supabase.auth.signOut({ scope: "local" });
 }
 
 /**
